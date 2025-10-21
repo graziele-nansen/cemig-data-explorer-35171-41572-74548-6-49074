@@ -30,6 +30,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
+  const [visibleDCUs, setVisibleDCUs] = useState<Set<string>>(new Set());
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -478,7 +479,15 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 Relatório
               </Button>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
+            <div className="flex items-center justify-center mb-2">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary">
+                  {analysis.commentCounts.reduce((sum, item) => sum + item.count, 0)}
+                </div>
+                <p className="text-sm text-muted-foreground">Total de DCUs em Análise</p>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={analysis.commentCounts}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
@@ -532,36 +541,62 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       </div>
 
       {/* Primeira linha: Top 10 Desvios e Variação Histórica */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Top 10 DCUs com Maior Desvio */}
-        <Card className="p-6 border border-border bg-card">
+        <Card className="p-6 border border-border bg-card md:col-span-1">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-warning" />
-            Top 10 Desvios da Média
+            Top 10 Desvios
           </h3>
-          <div className="space-y-2 max-h-[280px] overflow-y-auto">
-            {analysis.top10Deviations.map((dcuData, idx) => (
-              <div key={idx} className="flex items-center justify-between text-sm p-2 bg-background/50 rounded">
-                <span className="font-mono font-semibold">{idx + 1}. {dcuData.dcu}</span>
-                <div className="text-right">
-                  <div className="font-bold text-destructive">{dcuData.latestValue} med</div>
-                  <div className="text-muted-foreground text-xs">
-                    Média: {Math.round(dcuData.avg)} | Δ {Math.round(dcuData.deviation)}
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {analysis.top10Deviations.map((dcuData, idx) => {
+              const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
+              return (
+                <div 
+                  key={idx} 
+                  className={`flex items-center justify-between text-sm p-2 rounded cursor-pointer transition-all ${
+                    isVisible ? 'bg-background/50' : 'bg-muted/30 opacity-50'
+                  }`}
+                  onClick={() => {
+                    const newVisible = new Set(visibleDCUs);
+                    if (newVisible.has(dcuData.dcu)) {
+                      newVisible.delete(dcuData.dcu);
+                    } else {
+                      newVisible.add(dcuData.dcu);
+                    }
+                    setVisibleDCUs(newVisible);
+                  }}
+                >
+                  <span className="font-mono font-semibold flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                    />
+                    {idx + 1}. {dcuData.dcu}
+                  </span>
+                  <div className="text-right">
+                    <div className="font-bold text-destructive">{dcuData.latestValue}</div>
+                    <div className="text-muted-foreground text-xs">
+                      Δ {Math.round(dcuData.deviation)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Clique no ID da DCU para filtrar
+          </p>
         </Card>
 
         {/* Gráfico de Linhas - Variação Histórica Top 10 */}
         {analysis.top10Deviations.length > 0 && (
-          <Card className="p-6 border border-border bg-card">
+          <Card className="p-6 border border-border bg-card md:col-span-3">
             <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              Variação Histórica
+              Variação Histórica - Top 10 DCUs
             </h3>
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={400}>
               <LineChart data={analysis.trendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
@@ -588,17 +623,25 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                     return `${day}/${month}/${year}`;
                   }}
                 />
-                {analysis.top10Deviations.slice(0, 5).map((dcuData, idx) => (
-                  <Line
-                    key={idx}
-                    type="monotone"
-                    dataKey={`DCU${idx + 1}`}
-                    name={dcuData.dcu}
-                    stroke={COLORS[idx % COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 2 }}
-                  />
-                ))}
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px' }}
+                  iconType="line"
+                />
+                {analysis.top10Deviations.map((dcuData, idx) => {
+                  const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
+                  return (
+                    <Line
+                      key={idx}
+                      type="monotone"
+                      dataKey={`DCU${idx + 1}`}
+                      name={dcuData.dcu}
+                      stroke={COLORS[idx % COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      hide={!isVisible}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </Card>
