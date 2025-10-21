@@ -363,7 +363,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  color: 'white'
                 }} 
               />
             </PieChart>
@@ -392,7 +393,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </div>
             <Button 
               className="mt-6"
-              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
+              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Abrir Relatório
@@ -431,7 +432,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  color: 'white'
                 }} 
               />
               <text
@@ -497,7 +499,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  color: 'white'
                 }}
                 labelFormatter={(value) => {
                   const [day, month, year] = value.split('.');
@@ -637,11 +640,19 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
               <MessageSquare className="h-5 w-5 text-primary" />
               DCUs em Análise
             </h3>
-            <div className="px-4 py-2 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm text-muted-foreground">Total em Análise</p>
-              <p className="text-2xl font-bold text-primary">
-                {analysis.latestData.filter(d => d.Comentário && d.Comentário !== 'null').length}
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm text-muted-foreground">Total em Análise</p>
+                <p className="text-2xl font-bold text-primary">
+                  {analysis.latestData.filter(d => d.Comentário && d.Comentário !== 'null').length}
+                </p>
+              </div>
+              <Button 
+                onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir Relatório
+              </Button>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
@@ -663,7 +674,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  color: 'white'
                 }} 
               />
               <Bar dataKey="count" radius={[8, 8, 0, 0]}>
@@ -744,6 +756,53 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
               Mostrando 20 de {filteredData.length} DCUs
             </p>
           )}
+        </div>
+      </Card>
+
+      {/* Rodapé com Informações de Contato */}
+      <Card className="p-8 border border-border bg-card text-center">
+        <h3 className="text-xl font-semibold mb-4">Equipe I-NOC Nansen</h3>
+        <p className="text-muted-foreground mb-6">
+          Para dúvidas ou mais informações sobre este relatório, entre em contato com nossa equipe:
+        </p>
+        <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">Responsável pelo Relatório</p>
+            <p className="text-muted-foreground">Graziele Souza</p>
+            <a 
+              href="mailto:graziele.souza@nansen.com.br" 
+              className="text-primary hover:underline inline-flex items-center gap-1"
+            >
+              graziele.souza@nansen.com.br
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+          <div className="hidden md:block h-16 w-px bg-border"></div>
+          <div className="space-y-2">
+            <p className="font-semibold text-foreground">Revisores</p>
+            <div className="space-y-1">
+              <div>
+                <p className="text-muted-foreground">Alisson Ribeiro</p>
+                <a 
+                  href="mailto:alisson.ribeiro@nansen.com.br" 
+                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+                >
+                  alisson.ribeiro@nansen.com.br
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Evandro Silva</p>
+                <a 
+                  href="mailto:evandro.silva@nansen.com.br" 
+                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+                >
+                  evandro.silva@nansen.com.br
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </Card>
     </div>
