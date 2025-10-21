@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LineChart, Line } from 'recharts';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import nansenLogo from '@/assets/logo-nansen.png';
 
 interface DCUData {
   DCU: string;
@@ -279,7 +280,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
+      {/* ========== ANÁLISE DAS DCUs ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
@@ -289,7 +291,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </div>
       </div>
 
-      {/* Primeira linha: Estatísticas Gerais */}
+      {/* Primeira linha: Total, Online, Online sem Medidores */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           title="Total de DCUs"
@@ -311,7 +313,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         />
       </div>
 
-      {/* Mapa de DCUs */}
+      {/* Segunda linha: Mapa de Localização */}
       <Card className="p-6 border border-border bg-card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
@@ -334,7 +336,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <div ref={mapContainer} className="h-[400px] rounded-lg" />
       </Card>
 
-      {/* Segunda linha: Status e Casos em Análise */}
+      {/* Terceira linha: DCUs por Status e Casos em Análise */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DCUs por Status */}
         <Card className="p-6 border border-border bg-card">
@@ -403,7 +405,16 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </Card>
       </div>
 
-      {/* Terceira linha: DCUs Críticas e Análise Histórica */}
+      {/* ========== ANÁLISE DE CARGA ========== */}
+      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            Análise de Carga
+          </h2>
+        </div>
+      </div>
+
+      {/* Primeira linha: DCUs Críticas (Donut) e DCUs em Análise (Barras) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DCUs Críticas */}
         <Card className="p-6 border border-border bg-card">
@@ -451,6 +462,77 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </ResponsiveContainer>
         </Card>
 
+        {/* Gráfico de Barras - DCUs em Análise */}
+        {analysis.commentCounts.length > 0 && (
+          <Card className="p-6 border border-border bg-card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                DCUs em Análise
+              </h3>
+              <Button 
+                size="sm"
+                onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Relatório
+              </Button>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={analysis.commentCounts}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis 
+                  dataKey="name" 
+                  angle={0}
+                  height={80}
+                  interval={0}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  domain={[0, 'dataMax + 5']}
+                  allowDecimals={false}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    color: 'white'
+                  }} 
+                />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                  {analysis.commentCounts.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
+      </div>
+
+      {/* Segunda linha: Mapa de DCUs Críticas */}
+      <CriticalDCUsMap 
+        data={analysis.latestData}
+        overloaded={analysis.overloaded}
+        underloaded={analysis.underloaded}
+        noMeters={analysis.noMeters}
+        latestMeterColumn={analysis.latestMeterColumn}
+        mapboxToken={mapboxToken}
+      />
+
+      {/* ========== ANÁLISE HISTÓRICA ========== */}
+      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            Análise Histórica
+          </h2>
+        </div>
+      </div>
+
+      {/* Primeira linha: Top 10 Desvios e Variação Histórica */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top 10 DCUs com Maior Desvio */}
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -471,103 +553,59 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             ))}
           </div>
         </Card>
+
+        {/* Gráfico de Linhas - Variação Histórica Top 10 */}
+        {analysis.top10Deviations.length > 0 && (
+          <Card className="p-6 border border-border bg-card">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Variação Histórica
+            </h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={analysis.trendData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11 }}
+                  angle={0}
+                  height={50}
+                  tickFormatter={(value) => {
+                    const [day, month] = value.split('.');
+                    return `${day}/${month}`;
+                  }}
+                />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    color: 'white'
+                  }}
+                  labelFormatter={(value) => {
+                    const [day, month, year] = value.split('.');
+                    return `${day}/${month}/${year}`;
+                  }}
+                />
+                {analysis.top10Deviations.slice(0, 5).map((dcuData, idx) => (
+                  <Line
+                    key={idx}
+                    type="monotone"
+                    dataKey={`DCU${idx + 1}`}
+                    name={dcuData.dcu}
+                    stroke={COLORS[idx % COLORS.length]}
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
       </div>
 
-      {/* Gráfico de Linhas - Variação Histórica Top 10 */}
-      {analysis.top10Deviations.length > 0 && (
-        <Card className="p-6 border border-border bg-card">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            Variação Histórica - Top 10 DCUs
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">Clique em uma DCU na legenda para isolar sua linha</p>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={analysis.trendData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 13 }}
-                angle={0}
-                height={60}
-                tickFormatter={(value) => {
-                  const [day, month, year] = value.split('.');
-                  return `${day}/${month}/${year}`;
-                }}
-              />
-              <YAxis domain={['auto', 'auto']} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  color: 'white'
-                }}
-                labelFormatter={(value) => {
-                  const [day, month, year] = value.split('.');
-                  return `${day}/${month}/${year}`;
-                }}
-              />
-              <Legend 
-                wrapperStyle={{ fontSize: '14px', cursor: 'pointer' }}
-                onClick={(e) => {
-                  if (e.dataKey) {
-                    const dcuName = analysis.top10Deviations.find((_, idx) => `DCU${idx + 1}` === e.dataKey)?.dcu;
-                    if (dcuName) {
-                      setSelectedDCUs(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has(dcuName)) {
-                          newSet.delete(dcuName);
-                        } else {
-                          newSet.clear();
-                          newSet.add(dcuName);
-                        }
-                        return newSet;
-                      });
-                    }
-                  }
-                }}
-              />
-              {analysis.top10Deviations.map((dcuData, idx) => (
-                <Line
-                  key={idx}
-                  type="monotone"
-                  dataKey={`DCU${idx + 1}`}
-                  name={dcuData.dcu}
-                  stroke={COLORS[idx % COLORS.length]}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  hide={selectedDCUs.size > 0 && !selectedDCUs.has(dcuData.dcu)}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-          {selectedDCUs.size > 0 && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setSelectedDCUs(new Set())}
-              >
-                Mostrar todas as DCUs
-              </Button>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Mapa de DCUs Críticas */}
-      <CriticalDCUsMap 
-        data={analysis.latestData}
-        overloaded={analysis.overloaded}
-        underloaded={analysis.underloaded}
-        noMeters={analysis.noMeters}
-        latestMeterColumn={analysis.latestMeterColumn}
-        mapboxToken={mapboxToken}
-      />
-
-
-      {/* Lista Detalhada das DCUs Críticas */}
+      {/* Segunda linha: Sobrecarregadas, Pouca Carga e Sem Medidores */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {analysis.overloaded.length > 0 && (
           <Card className="p-4 border-destructive/30 bg-destructive/5">
@@ -633,62 +671,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         )}
       </div>
 
-      {/* Gráfico de Barras - DCUs em Análise */}
-      {analysis.commentCounts.length > 0 && (
-        <Card className="p-6 border border-border bg-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              DCUs em Análise
-            </h3>
-            <div className="flex items-center gap-4">
-              <div className="px-4 py-2 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-sm text-muted-foreground">Total em Análise</p>
-                <p className="text-2xl font-bold text-primary">
-                  {analysis.latestData.filter(d => d.Comentário && d.Comentário !== 'null').length}
-                </p>
-              </div>
-              <Button 
-                onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Abrir Relatório
-              </Button>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={analysis.commentCounts}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-              <XAxis 
-                dataKey="name" 
-                angle={0}
-                height={80}
-                interval={0}
-                tick={{ fontSize: 13 }}
-              />
-              <YAxis 
-                domain={[0, 'dataMax + 5']}
-                allowDecimals={false}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  color: 'white'
-                }} 
-              />
-              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                {analysis.commentCounts.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
-
+      {/* Terceira linha: Tabela com Filtro por Comentário */}
       {analysis.comments.length > 0 && (
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4">Filtrar por Comentário</h3>
@@ -761,48 +744,57 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       </Card>
 
       {/* Rodapé com Informações de Contato */}
-      <Card className="p-8 border border-border bg-card text-center">
-        <h3 className="text-xl font-semibold mb-4">Equipe I-NOC Nansen</h3>
-        <p className="text-muted-foreground mb-6">
-          Para dúvidas ou mais informações sobre este relatório, entre em contato com nossa equipe:
-        </p>
-        <div className="flex flex-col md:flex-row justify-center items-center gap-6">
-          <div className="space-y-2">
-            <p className="font-semibold text-foreground">Responsável pelo Relatório</p>
-            <p className="text-muted-foreground">Graziele Souza</p>
+      <Card className="p-8 border border-border bg-card">
+        <div className="flex flex-col items-center mb-6">
+          <img 
+            src={nansenLogo} 
+            alt="Nansen Logo" 
+            className="h-12 w-auto mb-4" 
+          />
+          <h3 className="text-xl font-semibold mb-2">Equipe I-NOC Nansen</h3>
+          <p className="text-muted-foreground text-center">
+            Para dúvidas ou mais informações sobre este dashboard, entre em contato com nossa equipe:
+          </p>
+        </div>
+        <div className="flex flex-col md:flex-row justify-center items-start md:items-center gap-8 max-w-4xl mx-auto">
+          <div className="flex-1 text-center space-y-2">
+            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Responsável pelo Dashboard</p>
+            <p className="text-lg font-medium text-foreground">Graziele Souza</p>
             <a 
               href="mailto:graziele.souza@nansen.com.br" 
-              className="text-primary hover:underline inline-flex items-center gap-1"
+              className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
             >
               graziele.souza@nansen.com.br
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>
-          <div className="hidden md:block h-16 w-px bg-border"></div>
-          <div className="space-y-2">
-            <p className="font-semibold text-foreground">Revisores</p>
-            <div className="space-y-1">
-              <div>
-                <p className="text-muted-foreground">Alisson Ribeiro</p>
-                <a 
-                  href="mailto:alisson.ribeiro@nansen.com.br" 
-                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
-                >
-                  alisson.ribeiro@nansen.com.br
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Evandro Silva</p>
-                <a 
-                  href="mailto:evandro.silva@nansen.com.br" 
-                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
-                >
-                  evandro.silva@nansen.com.br
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
+          
+          <div className="hidden md:block w-px h-24 bg-border"></div>
+          
+          <div className="flex-1 text-center space-y-2">
+            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Revisor</p>
+            <p className="text-lg font-medium text-foreground">Evandro Silva</p>
+            <a 
+              href="mailto:evandro.silva@nansen.com.br" 
+              className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+            >
+              evandro.silva@nansen.com.br
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+
+          <div className="hidden md:block w-px h-24 bg-border"></div>
+
+          <div className="flex-1 text-center space-y-2">
+            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Coordenador do Projeto</p>
+            <p className="text-lg font-medium text-foreground">Alisson Ribeiro</p>
+            <a 
+              href="mailto:alisson.ribeiro@nansen.com.br" 
+              className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+            >
+              alisson.ribeiro@nansen.com.br
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
         </div>
       </Card>
