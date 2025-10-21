@@ -119,13 +119,6 @@ export const MapTab = ({ data }: MapTabProps) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg border border-primary/20">
-            <MapPin className="h-5 w-5 text-primary" />
-            <div>
-              <p className="text-xs text-muted-foreground">Medidores Exibidos</p>
-              <p className="text-xl font-bold">{filteredData.length.toLocaleString()}</p>
-            </div>
-          </div>
         </div>
       </Card>
 

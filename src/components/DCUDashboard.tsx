@@ -2,9 +2,9 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatCard } from './StatCard';
-import { ExportButton } from './ExportButton';
 import { CriticalDCUsMap } from './CriticalDCUsMap';
-import { AlertTriangle, TrendingDown, Power, BarChart3, MessageSquare, Activity, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, TrendingDown, Power, BarChart3, MessageSquare, Activity, MapPin, ExternalLink } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LineChart, Line } from 'recharts';
 import mapboxgl from 'mapbox-gl';
@@ -28,6 +28,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const [mapboxToken, setMapboxToken] = useState<string>('pk.eyJ1IjoiZ3JhemllbGUtbmFuc2VuIiwiYSI6ImNtZ3ozdW9qMDF1M2cyc3B0MXphamhkbmYifQ.JxrSUz5Pd05pK7PXBDg2_w');
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -179,8 +180,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
   if (!analysis) {
     return (
-      <Card className="p-6">
-        <p className="text-muted-foreground">Carregue os dados de DCUs para visualizar o dashboard</p>
+      <Card className="p-8 border-2 border-dashed border-border">
+        <div className="text-center">
+          <h3 className="text-xl font-semibold mb-2">Nenhum dado carregado</h3>
+          <p className="text-muted-foreground">Envie os dados de DCUs via chat para visualizar o dashboard</p>
+        </div>
       </Card>
     );
   }
@@ -237,7 +241,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
         `<div style="padding: 8px;">
           <strong>${dcu.DCU}</strong><br/>
-          ${statusEmoji} ${statusLabel}
+          ${statusLabel}
         </div>`
       );
 
@@ -275,13 +279,12 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Análise das DCUs
-        </h2>
-        <div className="flex items-center gap-4">
-          <p className="text-base text-muted-foreground">Última atualização: {analysis.latestDate}</p>
-          <ExportButton data={filteredData} filename="dcu-dashboard" />
+      <div className="flex items-center justify-between border-b border-border pb-4">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            Análise das DCUs
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">Última atualização: {analysis.latestDate}</p>
         </div>
       </div>
 
@@ -308,7 +311,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       </div>
 
       {/* Mapa de DCUs */}
-      <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+      <Card className="p-6 border border-border bg-card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
           Localização das DCUs
@@ -316,15 +319,15 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <div className="flex gap-6 mb-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
-            <span className="text-base">🟢 Online - {analysis.totalMetersByStatus.online} medidores</span>
+            <span className="text-sm">Online</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
-            <span className="text-base">🔴 Offline - {analysis.totalMetersByStatus.offline} medidores</span>
+            <span className="text-sm">Offline</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(215 20% 65%)' }}></div>
-            <span className="text-base">⚪ Não Registrado - {analysis.totalMetersByStatus.notRegistered} medidores</span>
+            <span className="text-sm">Não Registrado</span>
           </div>
         </div>
         <div ref={mapContainer} className="h-[400px] rounded-lg" />
@@ -333,7 +336,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       {/* Segunda linha: Status e Casos em Análise */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DCUs por Status */}
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Power className="h-5 w-5 text-primary" />
             DCUs por Status
@@ -368,12 +371,12 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </Card>
 
         {/* Casos em Análise */}
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
             Casos em Análise
           </h3>
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex flex-col items-center justify-center h-[300px]">
             <div className="text-center">
               <div className="text-6xl font-bold text-primary mb-2">
                 {analysis.casesInAnalysisPercent}%
@@ -387,6 +390,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 </div>
               )}
             </div>
+            <Button 
+              className="mt-6"
+              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Abrir Relatório
+            </Button>
           </div>
         </Card>
       </div>
@@ -394,7 +404,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       {/* Terceira linha: DCUs Críticas e Análise Histórica */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DCUs Críticas */}
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             DCUs Críticas
@@ -439,7 +449,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </Card>
 
         {/* Top 10 DCUs com Maior Desvio */}
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-warning" />
             Top 10 Desvios da Média
@@ -462,11 +472,12 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
       {/* Gráfico de Linhas - Variação Histórica Top 10 */}
       {analysis.top10Deviations.length > 0 && (
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             Variação Histórica - Top 10 DCUs
           </h3>
+          <p className="text-sm text-muted-foreground mb-4">Clique em uma DCU na legenda para isolar sua linha</p>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={analysis.trendData}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
@@ -493,7 +504,26 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   return `${day}/${month}/${year}`;
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: '14px' }} />
+              <Legend 
+                wrapperStyle={{ fontSize: '14px', cursor: 'pointer' }}
+                onClick={(e) => {
+                  if (e.dataKey) {
+                    const dcuName = analysis.top10Deviations.find((_, idx) => `DCU${idx + 1}` === e.dataKey)?.dcu;
+                    if (dcuName) {
+                      setSelectedDCUs(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has(dcuName)) {
+                          newSet.delete(dcuName);
+                        } else {
+                          newSet.clear();
+                          newSet.add(dcuName);
+                        }
+                        return newSet;
+                      });
+                    }
+                  }
+                }}
+              />
               {analysis.top10Deviations.map((dcuData, idx) => (
                 <Line
                   key={idx}
@@ -503,10 +533,22 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   stroke={COLORS[idx % COLORS.length]}
                   strokeWidth={2}
                   dot={{ r: 3 }}
+                  hide={selectedDCUs.size > 0 && !selectedDCUs.has(dcuData.dcu)}
                 />
               ))}
             </LineChart>
           </ResponsiveContainer>
+          {selectedDCUs.size > 0 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSelectedDCUs(new Set())}
+              >
+                Mostrar todas as DCUs
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
@@ -589,7 +631,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
       {/* Gráfico de Barras - DCUs em Análise */}
       {analysis.commentCounts.length > 0 && (
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" />
@@ -635,7 +677,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       )}
 
       {analysis.comments.length > 0 && (
-        <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4">Filtrar por Comentário</h3>
           <Select value={selectedComment} onValueChange={setSelectedComment}>
             <SelectTrigger className="w-full md:w-[300px]">
@@ -656,7 +698,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </Card>
       )}
 
-      <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+      <Card className="p-6 border border-border bg-card">
         <h3 className="text-xl font-semibold mb-4">
           Detalhes das DCUs {selectedComment !== 'all' && `(${selectedComment})`}
         </h3>

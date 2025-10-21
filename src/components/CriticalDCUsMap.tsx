@@ -93,7 +93,7 @@ export const CriticalDCUsMap = ({
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
         `<div style="padding: 8px;">
           <strong>${dcu.DCU}</strong><br/>
-          ${emoji} ${label}<br/>
+          ${label}<br/>
           ${meters} medidores
         </div>`
       );
@@ -123,7 +123,7 @@ export const CriticalDCUsMap = ({
   }
 
   return (
-    <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur">
+    <Card className="p-6 border border-border bg-card">
       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <MapPin className="h-5 w-5 text-destructive" />
         Mapa de DCUs Críticas
@@ -131,15 +131,15 @@ export const CriticalDCUsMap = ({
       <div className="flex gap-6 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
-          <span className="text-base">🔴 Sobrecarga ({overloaded.length})</span>
+          <span className="text-sm">Sobrecarga ({overloaded.length})</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--warning))' }}></div>
-          <span className="text-base">🟡 Subcarga ({underloaded.length})</span>
+          <span className="text-sm">Subcarga ({underloaded.length})</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(215 20% 65%)' }}></div>
-          <span className="text-base">⚪ Sem medidores ({noMeters.length})</span>
+          <span className="text-sm">Sem medidores ({noMeters.length})</span>
         </div>
       </div>
       <div ref={mapContainer} className="h-[400px] rounded-lg" />
