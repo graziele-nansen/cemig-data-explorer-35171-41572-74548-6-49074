@@ -141,7 +141,14 @@ export const InsightsPage = ({ data }: InsightsPageProps) => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

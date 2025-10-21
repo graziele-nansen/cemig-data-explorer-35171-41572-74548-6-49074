@@ -38,11 +38,11 @@ const Index = () => {
       <NansenHeader />
       
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl font-bold text-foreground mb-3">
             Monitoração da Rede AMI CEMIG
           </h1>
-          <p className="text-lg text-muted-foreground">Equipe de I-NOC Nansen</p>
+          <p className="text-xl text-muted-foreground">Equipe de I-NOC Nansen</p>
         </div>
 
         <DCUDashboard data={dcuData} />

@@ -38,9 +38,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
   return (
     <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl">
-      <p className="font-semibold text-sm mb-1">{label}</p>
+      <p className="font-semibold text-sm mb-1 text-white">{label}</p>
       {payload.map((entry: any, index: number) => (
-        <p key={index} className="text-xs" style={{ color: entry.color }}>
+        <p key={index} className="text-xs text-white">
           {entry.name}: <span className="font-bold">{entry.value}</span>
         </p>
       ))}

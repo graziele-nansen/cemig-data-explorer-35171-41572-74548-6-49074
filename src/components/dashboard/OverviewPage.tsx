@@ -101,7 +101,14 @@ export const OverviewPage = ({ data, analysis }: OverviewPageProps) => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -119,7 +126,14 @@ export const OverviewPage = ({ data, analysis }: OverviewPageProps) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="index" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
                   <Legend />
                   <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} />
                 </LineChart>

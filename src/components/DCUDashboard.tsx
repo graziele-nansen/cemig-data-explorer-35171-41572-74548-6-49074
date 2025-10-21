@@ -239,9 +239,10 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       const statusEmoji = status === 'online' ? '🟢' : status === 'offline' ? '🔴' : '⚪';
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<div style="padding: 8px;">
-          <strong>${dcu.DCU}</strong><br/>
-          ${statusLabel}
+        `<div style="padding: 12px; min-width: 150px;">
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #333;">DCU: ${dcu.DCU}</div>
+          <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Status: ${statusLabel}</div>
+          <div style="font-size: 14px; color: #666;">Medidores: ${meters}</div>
         </div>`
       );
 

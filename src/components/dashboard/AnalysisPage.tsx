@@ -48,7 +48,14 @@ export const AnalysisPage = ({ data, analysis }: AnalysisPageProps) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
                 <Legend />
                 <Bar dataKey="média" fill="hsl(var(--primary))" />
                 <Bar dataKey="mínimo" fill="hsl(var(--secondary))" />
@@ -73,7 +80,15 @@ export const AnalysisPage = ({ data, analysis }: AnalysisPageProps) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="x" name={analysis.numberColumns[0]} />
                 <YAxis dataKey="y" name={analysis.numberColumns[1]} />
-                <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                <Tooltip 
+                  cursor={{ strokeDasharray: "3 3" }}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
                 <Scatter data={scatterData} fill="hsl(var(--primary))" />
               </ScatterChart>
             </ResponsiveContainer>

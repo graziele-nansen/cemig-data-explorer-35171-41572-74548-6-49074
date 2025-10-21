@@ -192,7 +192,14 @@ export const MeterDashboard = ({ data }: MeterDashboardProps) => {
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  color: 'white'
+                }}
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -220,7 +227,14 @@ export const MeterDashboard = ({ data }: MeterDashboardProps) => {
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
