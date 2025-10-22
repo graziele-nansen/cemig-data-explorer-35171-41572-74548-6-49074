@@ -8,7 +8,7 @@ export const NansenHeader = () => {
           <img 
             src={nansenLogo} 
             alt="Nansen Logo" 
-            className="h-14 w-auto shadow-lg shadow-primary/20" 
+            className="h-17 w-auto shadow-lg shadow-primary/20" 
           />
           <p className="text-xs text-muted-foreground tracking-[0.2em] uppercase">
             A ENERGIA QUE MOVE O BRASIL<br />

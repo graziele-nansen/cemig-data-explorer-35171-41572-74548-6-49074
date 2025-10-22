@@ -31,9 +31,6 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
   const [visibleDCUs, setVisibleDCUs] = useState<Set<string>>(new Set());
-  const [activeStatusIndex, setActiveStatusIndex] = useState<number | null>(null);
-  const [activeCriticalIndex, setActiveCriticalIndex] = useState<number | null>(null);
-  const [activeBarIndex, setActiveBarIndex] = useState<number | null>(null);
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -76,24 +73,38 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     });
 
     // Casos de atenção: Offline + Não Registrado + Online com 0 medidores
-    const attentionCases = data.filter(d => {
+    const offlineAttention = data.filter(d => d.Status?.toLowerCase() === 'offline');
+    const notRegisteredAttention = data.filter(d => d.Status?.toLowerCase() === 'não registrado');
+    const onlineNoMetersAttention = data.filter(d => {
       const status = d.Status?.toLowerCase();
       const meterValue = d[latestMeterColumn];
       const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
-      const isOnlineNoMeters = status === 'online' && hasNoMeters;
-      
-      return status === 'offline' || status === 'não registrado' || isOnlineNoMeters;
+      return status === 'online' && hasNoMeters;
     });
 
-    // Casos em análise: casos de atenção que possuem comentário
-    const casesInAnalysis = attentionCases.filter(d => {
+    // Casos em análise por categoria
+    const offlineInAnalysis = offlineAttention.filter(d => {
+      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
+      return hasComment;
+    });
+    
+    const notRegisteredInAnalysis = notRegisteredAttention.filter(d => {
+      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
+      return hasComment;
+    });
+    
+    const onlineNoMetersInAnalysis = onlineNoMetersAttention.filter(d => {
       const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
       return hasComment;
     });
 
+    // Total de casos de atenção e em análise
+    const totalAttentionCases = offlineAttention.length + notRegisteredAttention.length + onlineNoMetersAttention.length;
+    const totalInAnalysis = offlineInAnalysis.length + notRegisteredInAnalysis.length + onlineNoMetersInAnalysis.length;
+
     // Calcular porcentagem de casos em análise sobre casos de atenção
-    const casesInAnalysisPercent = attentionCases.length > 0 
-      ? Math.round((casesInAnalysis.length / attentionCases.length) * 100) 
+    const casesInAnalysisPercent = totalAttentionCases > 0 
+      ? Math.round((totalInAnalysis / totalAttentionCases) * 100) 
       : 0;
 
     // Análise histórica: calcular média e desvios
@@ -177,7 +188,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       onlineDCUs: onlineDCUs.length,
       offlineDCUs: offlineDCUs.length,
       notRegisteredDCUs: notRegisteredDCUs.length,
-      casesInAnalysis,
+      offlineAttention,
+      notRegisteredAttention,
+      onlineNoMetersAttention,
+      offlineInAnalysis,
+      notRegisteredInAnalysis,
+      onlineNoMetersInAnalysis,
+      totalAttentionCases,
+      totalInAnalysis,
       casesInAnalysisPercent,
       comments,
       commentCounts,
@@ -372,15 +390,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`}
-                onClick={(data, index) => {
-                  setActiveStatusIndex(activeStatusIndex === index ? null : index);
-                }}
               >
                 {analysis.statusCounts.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={entry.color}
-                    opacity={activeStatusIndex === null || activeStatusIndex === index ? 1 : 0.3}
                   />
                 ))}
               </Pie>
@@ -403,27 +417,52 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             <MessageSquare className="h-5 w-5 text-primary" />
             Casos em Análise
           </h3>
-          <div className="flex flex-col items-center justify-center h-[300px]">
-            <div className="text-center">
-              <div className="text-6xl font-bold text-primary mb-2">
-                {analysis.casesInAnalysisPercent}%
-              </div>
-              <p className="text-base text-muted-foreground">
-                dos casos de atenção<br/>já estão em análise
-              </p>
-              {analysis.casesInAnalysis.length > 0 && (
-                <div className="mt-4 text-sm text-muted-foreground">
-                  {analysis.casesInAnalysis.length} casos sob análise da equipe
+          <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[300px]">
+            {/* Coluna da esquerda - Detalhamento por categoria */}
+            <div className="flex-1 flex flex-col justify-center space-y-4 border-r border-border pr-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <span className="text-sm font-medium">Offline:</span>
+                  <span className="text-sm font-bold">
+                    {analysis.offlineInAnalysis.length} de {analysis.offlineAttention.length} em análise
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <span className="text-sm font-medium">Não registradas:</span>
+                  <span className="text-sm font-bold">
+                    {analysis.notRegisteredInAnalysis.length} de {analysis.notRegisteredAttention.length} em análise
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <span className="text-sm font-medium">Online sem medidores:</span>
+                  <span className="text-sm font-bold">
+                    {analysis.onlineNoMetersInAnalysis.length} de {analysis.onlineNoMetersAttention.length} em análise
+                  </span>
+                </div>
+              </div>
             </div>
-            <Button 
-              className="mt-6"
-              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Abrir Relatório
-            </Button>
+
+            {/* Coluna da direita - Total consolidado */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl font-bold text-primary mb-2">
+                  {analysis.casesInAnalysisPercent}%
+                </div>
+                <p className="text-base text-muted-foreground">
+                  dos casos de atenção<br/>já estão em análise
+                </p>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  {analysis.totalInAnalysis} de {analysis.totalAttentionCases} casos
+                </div>
+              </div>
+              <Button 
+                className="mt-6"
+                onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir Relatório
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
@@ -461,15 +500,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`}
-                onClick={(data, index) => {
-                  setActiveCriticalIndex(activeCriticalIndex === index ? null : index);
-                }}
               >
                 {criticalData.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={entry.color}
-                    opacity={activeCriticalIndex === null || activeCriticalIndex === index ? 1 : 0.3}
                   />
                 ))}
               </Pie>
@@ -548,15 +583,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   <Bar 
                     dataKey="count" 
                     radius={[8, 8, 0, 0]}
-                    onClick={(data, index) => {
-                      setActiveBarIndex(activeBarIndex === index ? null : index);
-                    }}
                   >
                     {analysis.commentCounts.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
                         fill={COLORS[index % COLORS.length]}
-                        opacity={activeBarIndex === null || activeBarIndex === index ? 1 : 0.3}
                       />
                     ))}
                   </Bar>
@@ -837,9 +868,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       </div>
 
       {/* Rodapé com Informações de Contato */}
-      <div className="relative border-t border-primary/20 bg-card/30 backdrop-blur-sm rounded-lg">
+      <div className="relative border-t border-primary/20 bg-card/30 backdrop-blur-sm mt-8">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-        <Card className="p-8 border-none bg-transparent shadow-none">
+        <div className="p-8">
         <div className="flex flex-col items-center mb-6">
           <img 
             src={nansenLogo} 
@@ -892,7 +923,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </a>
           </div>
         </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

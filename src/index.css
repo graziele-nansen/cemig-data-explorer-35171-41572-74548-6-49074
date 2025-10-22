@@ -66,7 +66,16 @@ All colors MUST be HSL.
     @apply bg-gradient-to-br from-[#041b2d] via-[#062a42] to-[#0a3c57] text-foreground min-h-screen;
     background-attachment: fixed;
     position: relative;
+    font-size: 16px; /* Aumentar base font de 14px para 16px (+2px) */
   }
+
+  /* Aumentar todas as fontes em 2px */
+  h1 { font-size: calc(2.25rem + 2px); }
+  h2 { font-size: calc(1.875rem + 2px); }
+  h3 { font-size: calc(1.5rem + 2px); }
+  h4 { font-size: calc(1.25rem + 2px); }
+  h5 { font-size: calc(1.125rem + 2px); }
+  p, span, div { font-size: inherit; }
 
   /* Efeito de rede de conexões no fundo */
   body::before {
