@@ -1,0 +1,17 @@
+# .github/workflows/deploy.yml
+name: Deploy Simulado
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build da aplicação
+        run: npm run build
+      - name: Simular deploy local
+        run: echo "Deploy simulado com sucesso!"
