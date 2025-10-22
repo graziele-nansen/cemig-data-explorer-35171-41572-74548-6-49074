@@ -31,6 +31,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
   const [visibleDCUs, setVisibleDCUs] = useState<Set<string>>(new Set());
+  const [activeStatusIndex, setActiveStatusIndex] = useState<number | null>(null);
+  const [activeCriticalIndex, setActiveCriticalIndex] = useState<number | null>(null);
+  const [activeBarIndex, setActiveBarIndex] = useState<number | null>(null);
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -72,17 +75,25 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       return meterValue && parseInt(meterValue) > 0 && parseInt(meterValue) < 50;
     });
 
-    // Casos em análise (Offline ou Não Registrado com comentário)
-    const casesInAnalysis = data.filter(d => {
+    // Casos de atenção: Offline + Não Registrado + Online com 0 medidores
+    const attentionCases = data.filter(d => {
       const status = d.Status?.toLowerCase();
-      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
-      return (status === 'offline' || status === 'não registrado') && hasComment;
+      const meterValue = d[latestMeterColumn];
+      const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+      const isOnlineNoMeters = status === 'online' && hasNoMeters;
+      
+      return status === 'offline' || status === 'não registrado' || isOnlineNoMeters;
     });
 
-    // Calcular porcentagem de casos em análise
-    const totalOfflineAndNotRegistered = offlineDCUs.length + notRegisteredDCUs.length;
-    const casesInAnalysisPercent = totalOfflineAndNotRegistered > 0 
-      ? Math.round((casesInAnalysis.length / totalOfflineAndNotRegistered) * 100) 
+    // Casos em análise: casos de atenção que possuem comentário
+    const casesInAnalysis = attentionCases.filter(d => {
+      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
+      return hasComment;
+    });
+
+    // Calcular porcentagem de casos em análise sobre casos de atenção
+    const casesInAnalysisPercent = attentionCases.length > 0 
+      ? Math.round((casesInAnalysis.length / attentionCases.length) * 100) 
       : 0;
 
     // Análise histórica: calcular média e desvios
@@ -282,7 +293,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* ========== ANÁLISE DAS DCUs ========== */}
+      {/* ========== ANÁLISE DE STATUS ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
@@ -291,6 +302,10 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <p className="text-sm text-muted-foreground mt-1">Última atualização: {analysis.latestDate}</p>
         </div>
       </div>
+      
+      <p className="text-muted-foreground leading-relaxed">
+        Esta seção apresenta o status atual das DCUs, permitindo a análise da saúde da rede AMI. São destacados os dispositivos com comportamento fora do esperado, como DCUs offline, não registradas ou online sem medidores. Também é possível acessar os relatórios da equipe I-NOC Nansen relacionados aos casos em análise.
+      </p>
 
       {/* Primeira linha: Total, Online, Online sem Medidores */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -357,9 +372,16 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`}
+                onClick={(data, index) => {
+                  setActiveStatusIndex(activeStatusIndex === index ? null : index);
+                }}
               >
                 {analysis.statusCounts.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color}
+                    opacity={activeStatusIndex === null || activeStatusIndex === index ? 1 : 0.3}
+                  />
                 ))}
               </Pie>
               <Tooltip 
@@ -387,7 +409,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 {analysis.casesInAnalysisPercent}%
               </div>
               <p className="text-base text-muted-foreground">
-                das DCUs Offline e Não Registradas<br/>já estão em análise
+                dos casos de atenção<br/>já estão em análise
               </p>
               {analysis.casesInAnalysis.length > 0 && (
                 <div className="mt-4 text-sm text-muted-foreground">
@@ -414,6 +436,10 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </h2>
         </div>
       </div>
+      
+      <p className="text-muted-foreground leading-relaxed">
+        Esta seção exibe a carga atual das DCUs, destacando aquelas que estão sobrecarregadas, subcarregadas ou sem medidores vinculados. Também são apresentados os casos em análise, com acesso aos relatórios técnicos correspondentes.
+      </p>
 
       {/* Primeira linha: DCUs Críticas (Donut) e DCUs em Análise (Barras) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -435,9 +461,16 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: ${value}`}
+                onClick={(data, index) => {
+                  setActiveCriticalIndex(activeCriticalIndex === index ? null : index);
+                }}
               >
                 {criticalData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color}
+                    opacity={activeCriticalIndex === null || activeCriticalIndex === index ? 1 : 0.3}
+                  />
                 ))}
               </Pie>
               <Tooltip 
@@ -487,36 +520,49 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 <p className="text-sm text-muted-foreground">Total de DCUs em Análise</p>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={analysis.commentCounts}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis 
-                  dataKey="name" 
-                  angle={0}
-                  height={80}
-                  interval={0}
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis 
-                  domain={[0, 'dataMax + 5']}
-                  allowDecimals={false}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    color: 'white'
-                  }} 
-                />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {analysis.commentCounts.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex justify-center">
+              <ResponsiveContainer width="95%" height={220}>
+                <BarChart data={analysis.commentCounts}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={0}
+                    height={80}
+                    interval={0}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    domain={[0, 'dataMax + 5']}
+                    allowDecimals={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: 'white'
+                    }} 
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    radius={[8, 8, 0, 0]}
+                    onClick={(data, index) => {
+                      setActiveBarIndex(activeBarIndex === index ? null : index);
+                    }}
+                  >
+                    {analysis.commentCounts.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]}
+                        opacity={activeBarIndex === null || activeBarIndex === index ? 1 : 0.3}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </Card>
         )}
       </div>
@@ -677,6 +723,10 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </h2>
         </div>
       </div>
+      
+      <p className="text-muted-foreground leading-relaxed">
+        Esta seção apresenta uma análise histórica da carga nas DCUs, com foco nos 10 dispositivos que registraram maior variação ao longo do tempo. A visualização permite identificar padrões de oscilação e avaliar a estabilidade da rede.
+      </p>
 
       {/* Primeira linha: Variação Histórica e Top 10 Desvios */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -787,7 +837,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       </div>
 
       {/* Rodapé com Informações de Contato */}
-      <Card className="p-8 border border-border bg-card">
+      <div className="relative border-t border-primary/20 bg-card/30 backdrop-blur-sm rounded-lg">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <Card className="p-8 border-none bg-transparent shadow-none">
         <div className="flex flex-col items-center mb-6">
           <img 
             src={nansenLogo} 
@@ -840,7 +892,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </a>
           </div>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

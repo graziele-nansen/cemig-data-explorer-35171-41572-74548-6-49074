@@ -4,7 +4,7 @@ export const NansenHeader = () => {
   return (
     <header className="relative border-b border-primary/20 bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto px-6 py-6">
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col items-center gap-3 text-center">
           <img 
             src={nansenLogo} 
             alt="Nansen Logo" 
