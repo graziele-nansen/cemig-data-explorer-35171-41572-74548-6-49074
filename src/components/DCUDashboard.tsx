@@ -286,7 +286,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            Análise das DCUs
+            Análise de Status
           </h2>
           <p className="text-sm text-muted-foreground mt-1">Última atualização: {analysis.latestDate}</p>
         </div>
@@ -531,124 +531,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         mapboxToken={mapboxToken}
       />
 
-      {/* ========== ANÁLISE HISTÓRICA ========== */}
-      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">
-            Análise Histórica
-          </h2>
-        </div>
-      </div>
-
-      {/* Primeira linha: Top 10 Desvios e Variação Histórica */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Top 10 DCUs com Maior Desvio */}
-        <Card className="p-6 border border-border bg-card md:col-span-1">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-warning" />
-            Top 10 Desvios
-          </h3>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {analysis.top10Deviations.map((dcuData, idx) => {
-              const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
-              return (
-                <div 
-                  key={idx} 
-                  className={`flex items-center justify-between text-sm p-2 rounded cursor-pointer transition-all ${
-                    isVisible ? 'bg-background/50' : 'bg-muted/30 opacity-50'
-                  }`}
-                  onClick={() => {
-                    const newVisible = new Set(visibleDCUs);
-                    if (newVisible.has(dcuData.dcu)) {
-                      newVisible.delete(dcuData.dcu);
-                    } else {
-                      newVisible.add(dcuData.dcu);
-                    }
-                    setVisibleDCUs(newVisible);
-                  }}
-                >
-                  <span className="font-mono font-semibold flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                    />
-                    {idx + 1}. {dcuData.dcu}
-                  </span>
-                  <div className="text-right">
-                    <div className="font-bold text-destructive">{dcuData.latestValue}</div>
-                    <div className="text-muted-foreground text-xs">
-                      Δ {Math.round(dcuData.deviation)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Clique no ID da DCU para filtrar
-          </p>
-        </Card>
-
-        {/* Gráfico de Linhas - Variação Histórica Top 10 */}
-        {analysis.top10Deviations.length > 0 && (
-          <Card className="p-6 border border-border bg-card md:col-span-3">
-            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              Variação Histórica - Top 10 DCUs
-            </h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={analysis.trendData}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 11 }}
-                  angle={0}
-                  height={50}
-                  tickFormatter={(value) => {
-                    const [day, month] = value.split('.');
-                    return `${day}/${month}`;
-                  }}
-                />
-                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    color: 'white'
-                  }}
-                  labelFormatter={(value) => {
-                    const [day, month, year] = value.split('.');
-                    return `${day}/${month}/${year}`;
-                  }}
-                />
-                <Legend 
-                  wrapperStyle={{ fontSize: '12px' }}
-                  iconType="line"
-                />
-                {analysis.top10Deviations.map((dcuData, idx) => {
-                  const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
-                  return (
-                    <Line
-                      key={idx}
-                      type="monotone"
-                      dataKey={`DCU${idx + 1}`}
-                      name={dcuData.dcu}
-                      stroke={COLORS[idx % COLORS.length]}
-                      strokeWidth={2}
-                      dot={{ r: 2 }}
-                      hide={!isVisible}
-                    />
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-        )}
-      </div>
-
-      {/* Segunda linha: Sobrecarregadas, Pouca Carga e Sem Medidores */}
+      {/* Terceira linha: Sobrecarregadas, Pouca Carga e Sem Medidores */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {analysis.overloaded.length > 0 && (
           <Card className="p-4 border-destructive/30 bg-destructive/5">
@@ -714,7 +597,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         )}
       </div>
 
-      {/* Terceira linha: Tabela com Filtro por Comentário */}
+      {/* Quarta linha: Tabela com Filtro por Comentário */}
       {analysis.comments.length > 0 && (
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4">Filtrar por Comentário</h3>
@@ -785,6 +668,123 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           )}
         </div>
       </Card>
+
+      {/* ========== ANÁLISE HISTÓRICA ========== */}
+      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            Análise Histórica
+          </h2>
+        </div>
+      </div>
+
+      {/* Primeira linha: Variação Histórica e Top 10 Desvios */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Gráfico de Linhas - Variação Histórica Top 10 */}
+        {analysis.top10Deviations.length > 0 && (
+          <Card className="p-6 border border-border bg-card md:col-span-3">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Variação Histórica - Top 10 DCUs
+            </h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={analysis.trendData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11 }}
+                  angle={0}
+                  height={50}
+                  tickFormatter={(value) => {
+                    const [day, month] = value.split('.');
+                    return `${day}/${month}`;
+                  }}
+                />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    color: 'white'
+                  }}
+                  labelFormatter={(value) => {
+                    const [day, month, year] = value.split('.');
+                    return `${day}/${month}/${year}`;
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px' }}
+                  iconType="line"
+                />
+                {analysis.top10Deviations.map((dcuData, idx) => {
+                  const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
+                  return (
+                    <Line
+                      key={idx}
+                      type="monotone"
+                      dataKey={`DCU${idx + 1}`}
+                      name={dcuData.dcu}
+                      stroke={COLORS[idx % COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      hide={!isVisible}
+                    />
+                  );
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
+
+        {/* Top 10 DCUs com Maior Desvio */}
+        <Card className="p-6 border border-border bg-card md:col-span-1">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <TrendingDown className="h-5 w-5 text-warning" />
+            Top 10 Desvios
+          </h3>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {analysis.top10Deviations.map((dcuData, idx) => {
+              const isVisible = visibleDCUs.size === 0 || visibleDCUs.has(dcuData.dcu);
+              return (
+                <div 
+                  key={idx} 
+                  className={`flex items-center justify-between text-sm p-2 rounded cursor-pointer transition-all ${
+                    isVisible ? 'bg-background/50' : 'bg-muted/30 opacity-50'
+                  }`}
+                  onClick={() => {
+                    const newVisible = new Set(visibleDCUs);
+                    if (newVisible.has(dcuData.dcu)) {
+                      newVisible.delete(dcuData.dcu);
+                    } else {
+                      newVisible.add(dcuData.dcu);
+                    }
+                    setVisibleDCUs(newVisible);
+                  }}
+                >
+                  <span className="font-mono font-semibold flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                    />
+                    {idx + 1}. {dcuData.dcu}
+                  </span>
+                  <div className="text-right">
+                    <div className="font-bold text-destructive">{dcuData.latestValue}</div>
+                    <div className="text-muted-foreground text-xs">
+                      Δ {Math.round(dcuData.deviation)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Clique no ID da DCU para filtrar
+          </p>
+        </Card>
+      </div>
 
       {/* Rodapé com Informações de Contato */}
       <Card className="p-8 border border-border bg-card">
