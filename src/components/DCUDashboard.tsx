@@ -867,9 +867,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         </Card>
       </div>
 
+      {/* Linha divisória antes do rodapé */}
+      <div className="relative my-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      </div>
+
       {/* Rodapé com Informações de Contato */}
-      <div className="relative border-t border-primary/20 bg-card/30 backdrop-blur-sm mt-8">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="relative bg-card/30 backdrop-blur-sm">
         <div className="p-8">
         <div className="flex flex-col items-center mb-6">
           <img 
