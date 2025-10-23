@@ -39,10 +39,13 @@ export const CriticalDCUsMap = ({
     // Combinar todas as DCUs críticas
     const criticalDCUs = [...overloaded, ...underloaded, ...noMeters];
 
-    // Filtrar DCUs com coordenadas válidas
+    // Filtrar DCUs com coordenadas válidas e excluir DCUs 715 e 642
     const dcusWithCoords = criticalDCUs.filter(d => {
       const lat = parseFloat(d.LAT);
       const long = parseFloat(d.LONG);
+      const dcuId = String(d.DCU || '');
+      // Excluir DCUs 715 e 642
+      if (dcuId === '715' || dcuId === '642') return false;
       return !isNaN(lat) && !isNaN(long) && lat !== 0 && long !== 0;
     });
 

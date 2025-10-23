@@ -23,6 +23,9 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
         (item) => {
           const lat = Number(item.LAT || item.latitude);
           const lng = Number(item.LONG || item.longitude);
+          const dcuId = String(item.DCU || '');
+          // Excluir DCUs 715 e 642
+          if (dcuId === '715' || dcuId === '642') return false;
           return lat && lng && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
         }
       );

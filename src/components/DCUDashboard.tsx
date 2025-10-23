@@ -224,10 +224,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken || !analysis) return;
 
-    // Filtrar DCUs com coordenadas válidas
+    // Filtrar DCUs com coordenadas válidas e excluir DCUs 715 e 642
     const dcusWithCoords = analysis.latestData.filter(d => {
       const lat = parseFloat(d.LAT);
       const long = parseFloat(d.LONG);
+      const dcuId = String(d.DCU || '');
+      // Excluir DCUs 715 e 642
+      if (dcuId === '715' || dcuId === '642') return false;
       return !isNaN(lat) && !isNaN(long) && lat !== 0 && long !== 0;
     });
 
