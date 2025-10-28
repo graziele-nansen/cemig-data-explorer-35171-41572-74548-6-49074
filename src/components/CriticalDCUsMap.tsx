@@ -36,13 +36,19 @@ export const CriticalDCUsMap = ({
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
+    // Função para converter coordenadas (dividir por 100000 para colocar ponto decimal)
+    const convertCoord = (coord: string): number => {
+      const num = parseFloat(coord);
+      return num / 100000;
+    };
+
     // Combinar todas as DCUs críticas
     const criticalDCUs = [...overloaded, ...underloaded, ...noMeters];
 
     // Filtrar DCUs com coordenadas válidas e excluir DCUs 715 e 642
     const dcusWithCoords = criticalDCUs.filter(d => {
-      const lat = parseFloat(d.LAT);
-      const long = parseFloat(d.LONG);
+      const lat = convertCoord(d.LAT);
+      const long = convertCoord(d.LONG);
       const dcuId = String(d.DCU || '');
       // Excluir DCUs 715 e 642
       if (dcuId === '715' || dcuId === '642') return false;
@@ -59,8 +65,8 @@ export const CriticalDCUsMap = ({
     mapboxgl.accessToken = mapboxToken;
     
     // Usar coordenadas válidas para o centro inicial
-    const initialLat = parseFloat(dcusWithCoords[0].LAT);
-    const initialLong = parseFloat(dcusWithCoords[0].LONG);
+    const initialLat = convertCoord(dcusWithCoords[0].LAT);
+    const initialLong = convertCoord(dcusWithCoords[0].LONG);
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -74,8 +80,8 @@ export const CriticalDCUsMap = ({
 
     // Adicionar marcadores
     dcusWithCoords.forEach(dcu => {
-      const lat = parseFloat(dcu.LAT);
-      const long = parseFloat(dcu.LONG);
+      const lat = convertCoord(dcu.LAT);
+      const long = convertCoord(dcu.LONG);
       
       // Validação adicional antes de criar o marcador
       if (lat < -90 || lat > 90 || long < -180 || long > 180) {
@@ -126,7 +132,7 @@ export const CriticalDCUsMap = ({
     if (dcusWithCoords.length > 1) {
       const bounds = new mapboxgl.LngLatBounds();
       dcusWithCoords.forEach(dcu => {
-        bounds.extend([parseFloat(dcu.LONG), parseFloat(dcu.LAT)]);
+        bounds.extend([convertCoord(dcu.LONG), convertCoord(dcu.LAT)]);
       });
       map.current.fitBounds(bounds, { padding: 50 });
     }
