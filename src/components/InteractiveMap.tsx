@@ -13,12 +13,6 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const mapboxToken = "pk.eyJ1IjoiZ3JhemllbGUtbmFuc2VuIiwiYSI6ImNtZ3ozdW9qMDF1M2cyc3B0MXphamhkbmYifQ.JxrSUz5Pd05pK7PXBDg2_w";
 
-  // Função para converter coordenadas (dividir por 100000 para colocar ponto decimal)
-  const convertCoord = (coord: number | string): number => {
-    const num = Number(coord);
-    return num / 100000;
-  };
-
   const initializeMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
 
@@ -27,8 +21,8 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
 
       const validCoords = data.filter(
         (item) => {
-          const lat = convertCoord(item.LAT || item.latitude || 0);
-          const lng = convertCoord(item.LONG || item.longitude || 0);
+          const lat = Number(item.LAT || item.latitude || 0);
+          const lng = Number(item.LONG || item.longitude || 0);
           const dcuId = String(item.DCU || '');
           // Excluir DCUs 715 e 642
           if (dcuId === '715' || dcuId === '642') return false;
@@ -46,8 +40,8 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
       }
 
       // Validar coordenadas do centro antes de criar o mapa
-      const centerLat = convertCoord(validCoords[0].LAT || validCoords[0].latitude || 0);
-      const centerLng = convertCoord(validCoords[0].LONG || validCoords[0].longitude || 0);
+      const centerLat = Number(validCoords[0].LAT || validCoords[0].latitude || 0);
+      const centerLng = Number(validCoords[0].LONG || validCoords[0].longitude || 0);
       
       if (centerLat < -90 || centerLat > 90 || centerLng < -180 || centerLng > 180) {
         toast.error("Coordenadas do centro inválidas");
@@ -67,8 +61,8 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
       map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
       validCoords.forEach((item) => {
-        const lat = convertCoord(item.LAT || item.latitude || 0);
-        const lng = convertCoord(item.LONG || item.longitude || 0);
+        const lat = Number(item.LAT || item.latitude || 0);
+        const lng = Number(item.LONG || item.longitude || 0);
         
         // Validação adicional antes de criar o marcador
         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {

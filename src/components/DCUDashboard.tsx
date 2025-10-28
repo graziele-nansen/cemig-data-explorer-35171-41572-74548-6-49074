@@ -224,16 +224,10 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken || !analysis) return;
 
-    // Função para converter coordenadas (dividir por 100000 para colocar ponto decimal)
-    const convertCoord = (coord: string): number => {
-      const num = parseFloat(coord);
-      return num / 100000;
-    };
-
     // Filtrar DCUs com coordenadas válidas
     const dcusWithCoords = analysis.latestData.filter(d => {
-      const lat = convertCoord(d.LAT);
-      const long = convertCoord(d.LONG);
+      const lat = parseFloat(d.LAT);
+      const long = parseFloat(d.LONG);
       // Validar se as coordenadas estão dentro dos limites válidos
       return !isNaN(lat) && !isNaN(long) && 
              lat >= -90 && lat <= 90 && 
@@ -247,8 +241,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     mapboxgl.accessToken = mapboxToken;
     
     // Usar coordenadas válidas para o centro inicial
-    const initialLat = convertCoord(dcusWithCoords[0].LAT);
-    const initialLong = convertCoord(dcusWithCoords[0].LONG);
+    const initialLat = parseFloat(dcusWithCoords[0].LAT);
+    const initialLong = parseFloat(dcusWithCoords[0].LONG);
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -262,8 +256,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
     // Adicionar marcadores
     dcusWithCoords.forEach(dcu => {
-      const lat = convertCoord(dcu.LAT);
-      const long = convertCoord(dcu.LONG);
+      const lat = parseFloat(dcu.LAT);
+      const long = parseFloat(dcu.LONG);
       
       // Validação adicional antes de criar o marcador
       if (lat < -90 || lat > 90 || long < -180 || long > 180) {
@@ -308,7 +302,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     if (dcusWithCoords.length > 1) {
       const bounds = new mapboxgl.LngLatBounds();
       dcusWithCoords.forEach(dcu => {
-        bounds.extend([convertCoord(dcu.LONG), convertCoord(dcu.LAT)]);
+        bounds.extend([parseFloat(dcu.LONG), parseFloat(dcu.LAT)]);
       });
       map.current.fitBounds(bounds, { padding: 50 });
     }
