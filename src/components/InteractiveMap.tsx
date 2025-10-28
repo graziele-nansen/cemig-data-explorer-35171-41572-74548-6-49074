@@ -26,7 +26,11 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
           const dcuId = String(item.DCU || '');
           // Excluir DCUs 715 e 642
           if (dcuId === '715' || dcuId === '642') return false;
-          return lat && lng && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+          // Validar se as coordenadas estão dentro dos limites válidos
+          return lat && lng && !isNaN(lat) && !isNaN(lng) && 
+                 lat >= -90 && lat <= 90 && 
+                 lng >= -180 && lng <= 180 &&
+                 lat !== 0 && lng !== 0;
         }
       );
 
@@ -35,10 +39,16 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
         return;
       }
 
-      const center: [number, number] = [
-        Number(validCoords[0].LONG || validCoords[0].longitude),
-        Number(validCoords[0].LAT || validCoords[0].latitude),
-      ];
+      // Validar coordenadas do centro antes de criar o mapa
+      const centerLat = Number(validCoords[0].LAT || validCoords[0].latitude);
+      const centerLng = Number(validCoords[0].LONG || validCoords[0].longitude);
+      
+      if (centerLat < -90 || centerLat > 90 || centerLng < -180 || centerLng > 180) {
+        toast.error("Coordenadas do centro inválidas");
+        return;
+      }
+
+      const center: [number, number] = [centerLng, centerLat];
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -51,6 +61,15 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
       map.current.addControl(new mapboxgl.FullscreenControl(), "top-right");
 
       validCoords.forEach((item) => {
+        const lat = Number(item.LAT || item.latitude);
+        const lng = Number(item.LONG || item.longitude);
+        
+        // Validação adicional antes de criar o marcador
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          console.warn(`Coordenadas inválidas para item: lat=${lat}, lng=${lng}`);
+          return;
+        }
+        
         // Define cor baseada no Status
         let markerColor = "#0ea5e9"; // default
         const status = (item as any).Status;
@@ -92,7 +111,7 @@ export const InteractiveMap = ({ data }: InteractiveMapProps) => {
         markerEl.style.cursor = 'pointer';
 
         new mapboxgl.Marker({ element: markerEl })
-          .setLngLat([Number(item.LONG || item.longitude), Number(item.LAT || item.latitude)])
+          .setLngLat([lng, lat])
           .setPopup(popup)
           .addTo(map.current!);
       });

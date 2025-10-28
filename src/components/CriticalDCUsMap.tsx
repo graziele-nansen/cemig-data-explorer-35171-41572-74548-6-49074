@@ -46,7 +46,11 @@ export const CriticalDCUsMap = ({
       const dcuId = String(d.DCU || '');
       // Excluir DCUs 715 e 642
       if (dcuId === '715' || dcuId === '642') return false;
-      return !isNaN(lat) && !isNaN(long) && lat !== 0 && long !== 0;
+      // Validar se as coordenadas estão dentro dos limites válidos
+      return !isNaN(lat) && !isNaN(long) && 
+             lat >= -90 && lat <= 90 && 
+             long >= -180 && long <= 180 &&
+             lat !== 0 && long !== 0;
     });
 
     if (dcusWithCoords.length === 0) return;
@@ -54,10 +58,14 @@ export const CriticalDCUsMap = ({
     // Inicializar mapa
     mapboxgl.accessToken = mapboxToken;
     
+    // Usar coordenadas válidas para o centro inicial
+    const initialLat = parseFloat(dcusWithCoords[0].LAT);
+    const initialLong = parseFloat(dcusWithCoords[0].LONG);
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [parseFloat(dcusWithCoords[0].LONG), parseFloat(dcusWithCoords[0].LAT)],
+      center: [initialLong, initialLat],
       zoom: 10,
     });
 
@@ -68,6 +76,13 @@ export const CriticalDCUsMap = ({
     dcusWithCoords.forEach(dcu => {
       const lat = parseFloat(dcu.LAT);
       const long = parseFloat(dcu.LONG);
+      
+      // Validação adicional antes de criar o marcador
+      if (lat < -90 || lat > 90 || long < -180 || long > 180) {
+        console.warn(`Coordenadas inválidas para DCU ${dcu.DCU}: lat=${lat}, long=${long}`);
+        return;
+      }
+      
       const meters = dcu[latestMeterColumn] ? parseInt(dcu[latestMeterColumn]) : 0;
       
       let color = 'hsl(215 20% 65%)'; // Sem medidores (cinza)

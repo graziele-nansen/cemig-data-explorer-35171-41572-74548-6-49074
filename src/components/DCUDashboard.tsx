@@ -228,7 +228,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     const dcusWithCoords = analysis.latestData.filter(d => {
       const lat = parseFloat(d.LAT);
       const long = parseFloat(d.LONG);
-      return !isNaN(lat) && !isNaN(long) && lat !== 0 && long !== 0;
+      // Validar se as coordenadas estão dentro dos limites válidos
+      return !isNaN(lat) && !isNaN(long) && 
+             lat >= -90 && lat <= 90 && 
+             long >= -180 && long <= 180 &&
+             lat !== 0 && long !== 0;
     });
 
     if (dcusWithCoords.length === 0) return;
@@ -236,10 +240,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     // Inicializar mapa
     mapboxgl.accessToken = mapboxToken;
     
+    // Usar coordenadas válidas para o centro inicial
+    const initialLat = parseFloat(dcusWithCoords[0].LAT);
+    const initialLong = parseFloat(dcusWithCoords[0].LONG);
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [parseFloat(dcusWithCoords[0].LONG), parseFloat(dcusWithCoords[0].LAT)],
+      center: [initialLong, initialLat],
       zoom: 10,
     });
 
@@ -250,6 +258,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     dcusWithCoords.forEach(dcu => {
       const lat = parseFloat(dcu.LAT);
       const long = parseFloat(dcu.LONG);
+      
+      // Validação adicional antes de criar o marcador
+      if (lat < -90 || lat > 90 || long < -180 || long > 180) {
+        console.warn(`Coordenadas inválidas para DCU ${dcu.DCU}: lat=${lat}, long=${long}`);
+        return;
+      }
+      
       const status = dcu.Status?.toLowerCase();
       
       let color = 'hsl(215 20% 65%)'; // Não registrado (cinza)
