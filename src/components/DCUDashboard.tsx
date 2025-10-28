@@ -861,9 +861,21 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
               );
             })}
           </div>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Clique no ID da DCU para filtrar
-          </p>
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-muted-foreground text-center">
+              Clique no ID da DCU para filtrar
+            </p>
+            {visibleDCUs.size > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleDCUs(new Set())}
+                className="w-full text-xs"
+              >
+                Voltar (mostrar todas)
+              </Button>
+            )}
+          </div>
         </Card>
       </div>
 
