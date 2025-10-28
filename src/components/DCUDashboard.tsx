@@ -15,6 +15,7 @@ interface DCUData {
   DCU: string;
   Status: string;
   Comentário: string;
+  'Status da Análise'?: string;
   LAT: string;
   LONG: string;
   [key: string]: string; // Para as colunas dinâmicas de Meters XX.XX.XXXX
@@ -82,29 +83,34 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       return status === 'online' && hasNoMeters;
     });
 
-    // Casos em análise por categoria
-    const offlineInAnalysis = offlineAttention.filter(d => {
-      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
-      return hasComment;
-    });
-    
-    const notRegisteredInAnalysis = notRegisteredAttention.filter(d => {
-      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
-      return hasComment;
-    });
-    
-    const onlineNoMetersInAnalysis = onlineNoMetersAttention.filter(d => {
-      const hasComment = d.Comentário && d.Comentário !== 'null' && d.Comentário.trim() !== '';
-      return hasComment;
-    });
+    // Casos "Em estudo" - filtrar DCUs com Comentário = "Em estudo"
+    const casesInStudy = data.filter(d => 
+      d.Comentário && d.Comentário.toLowerCase().trim() === 'em estudo'
+    );
 
-    // Total de casos de atenção e em análise
+    // Agrupar casos "Em estudo" por "Status da Análise"
+    const analysisByStatus = {
+      identificado: casesInStudy.filter(d => 
+        d['Status da Análise'] && d['Status da Análise'].toLowerCase().trim() === 'identificado'
+      ),
+      emAnalise: casesInStudy.filter(d => 
+        d['Status da Análise'] && d['Status da Análise'].toLowerCase().trim() === 'em análise'
+      ),
+      aguardandoAtuacao: casesInStudy.filter(d => 
+        d['Status da Análise'] && d['Status da Análise'].toLowerCase().trim() === 'aguardando atuação'
+      ),
+      solucionado: casesInStudy.filter(d => 
+        d['Status da Análise'] && d['Status da Análise'].toLowerCase().trim() === 'solucionado'
+      ),
+    };
+
+    // Total de casos de atenção e em estudo
     const totalAttentionCases = offlineAttention.length + notRegisteredAttention.length + onlineNoMetersAttention.length;
-    const totalInAnalysis = offlineInAnalysis.length + notRegisteredInAnalysis.length + onlineNoMetersInAnalysis.length;
+    const totalInStudy = casesInStudy.length;
 
-    // Calcular porcentagem de casos em análise sobre casos de atenção
-    const casesInAnalysisPercent = totalAttentionCases > 0 
-      ? Math.round((totalInAnalysis / totalAttentionCases) * 100) 
+    // Calcular porcentagem de casos em estudo sobre casos de atenção
+    const casesInStudyPercent = totalAttentionCases > 0 
+      ? Math.round((totalInStudy / totalAttentionCases) * 100) 
       : 0;
 
     // Análise histórica: calcular média e desvios
@@ -191,12 +197,11 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       offlineAttention,
       notRegisteredAttention,
       onlineNoMetersAttention,
-      offlineInAnalysis,
-      notRegisteredInAnalysis,
-      onlineNoMetersInAnalysis,
+      casesInStudy,
+      analysisByStatus,
       totalAttentionCases,
-      totalInAnalysis,
-      casesInAnalysisPercent,
+      totalInStudy,
+      casesInStudyPercent,
       comments,
       commentCounts,
       latestData: data,
@@ -433,25 +438,31 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             Casos em Análise
           </h3>
           <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[300px]">
-            {/* Coluna da esquerda - Detalhamento por categoria */}
+            {/* Coluna da esquerda - Detalhamento por status da análise */}
             <div className="flex-1 flex flex-col justify-center space-y-4 border-r border-border pr-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Offline:</span>
+                  <span className="text-sm font-medium">Identificado:</span>
                   <span className="text-sm font-bold">
-                    {analysis.offlineInAnalysis.length} de {analysis.offlineAttention.length} em análise
+                    {analysis.analysisByStatus.identificado.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Não registradas:</span>
+                  <span className="text-sm font-medium">Em análise:</span>
                   <span className="text-sm font-bold">
-                    {analysis.notRegisteredInAnalysis.length} de {analysis.notRegisteredAttention.length} em análise
+                    {analysis.analysisByStatus.emAnalise.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Online sem medidores:</span>
+                  <span className="text-sm font-medium">Aguardando atuação:</span>
                   <span className="text-sm font-bold">
-                    {analysis.onlineNoMetersInAnalysis.length} de {analysis.onlineNoMetersAttention.length} em análise
+                    {analysis.analysisByStatus.aguardandoAtuacao.length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                  <span className="text-sm font-medium">Solucionado:</span>
+                  <span className="text-sm font-bold">
+                    {analysis.analysisByStatus.solucionado.length}
                   </span>
                 </div>
               </div>
@@ -461,13 +472,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl font-bold text-primary mb-2">
-                  {analysis.casesInAnalysisPercent}%
+                  {analysis.casesInStudyPercent}%
                 </div>
                 <p className="text-base text-muted-foreground">
-                  dos casos de atenção<br/>já estão em análise
+                  dos casos de atenção<br/>estão em estudo
                 </p>
                 <div className="mt-4 text-sm text-muted-foreground">
-                  {analysis.totalInAnalysis} de {analysis.totalAttentionCases} casos
+                  {analysis.totalInStudy} de {analysis.totalAttentionCases} casos
                 </div>
               </div>
               <Button 
