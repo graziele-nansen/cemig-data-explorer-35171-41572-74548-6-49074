@@ -4,9 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StatCard } from './StatCard';
 import { CriticalDCUsMap } from './CriticalDCUsMap';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, TrendingDown, Power, BarChart3, MessageSquare, Activity, MapPin, ExternalLink } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Power, BarChart3, MessageSquare, Activity, MapPin, ExternalLink, ChevronDown } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LineChart, Line } from 'recharts';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import nansenLogo from '@/assets/logo-nansen.png';
@@ -24,6 +25,27 @@ interface DCUData {
 interface DCUDashboardProps {
   data: DCUData[];
 }
+
+// Função auxiliar para determinar o motivo de uma DCU estar em análise
+const getReasonForDCU = (dcu: DCUData, latestMeterColumn: string): string => {
+  const status = dcu.Status?.toLowerCase();
+  const meterValue = dcu[latestMeterColumn];
+  const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+  
+  if (status === 'não registrado') {
+    return 'Status da DCU é não registrado';
+  }
+  
+  if (status === 'offline') {
+    return 'Status da DCU é offline';
+  }
+  
+  if (status === 'online' && hasNoMeters) {
+    return 'Status da DCU é online mas não contém medidores';
+  }
+  
+  return 'Motivo não identificado';
+};
 
 export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const [selectedComment, setSelectedComment] = useState<string>('all');
@@ -433,62 +455,136 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
         {/* Casos em Análise */}
         <Card className="p-6 border border-border bg-card">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
-            Casos em Análise
-          </h3>
-          <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[300px]">
-            {/* Coluna da esquerda - Detalhamento por status da análise */}
-            <div className="flex-1 flex flex-col justify-center space-y-4 border-r border-border pr-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Identificado:</span>
-                  <span className="text-sm font-bold">
-                    {analysis.analysisByStatus.identificado.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Em análise:</span>
-                  <span className="text-sm font-bold">
-                    {analysis.analysisByStatus.emAnalise.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Aguardando atuação:</span>
-                  <span className="text-sm font-bold">
-                    {analysis.analysisByStatus.aguardandoAtuacao.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <span className="text-sm font-medium">Solucionado:</span>
-                  <span className="text-sm font-bold">
-                    {analysis.analysisByStatus.solucionado.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Casos em Análise
+            </h3>
+            <Button 
+              size="sm"
+              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Relatório
+            </Button>
+          </div>
 
-            {/* Coluna da direita - Total consolidado */}
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl font-bold text-primary mb-2">
-                  {analysis.casesInStudyPercent}%
+          <div className="space-y-3">
+            {/* Status: Identificado */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
+                <div className="flex items-center gap-3">
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                  <span className="font-medium">Identificado</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({analysis.analysisByStatus.identificado.length} casos)
+                  </span>
                 </div>
-                <p className="text-base text-muted-foreground">
-                  dos casos de atenção<br/>estão em estudo
-                </p>
-                <div className="mt-4 text-sm text-muted-foreground">
-                  {analysis.totalInStudy} de {analysis.totalAttentionCases} casos
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-2 pl-7">
+                  {analysis.analysisByStatus.identificado.map((dcu) => {
+                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
+                    return (
+                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
+                        <div className="font-medium text-sm">{dcu.DCU}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
+                      </div>
+                    );
+                  })}
+                  {analysis.analysisByStatus.identificado.length === 0 && (
+                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso identificado</div>
+                  )}
                 </div>
-              </div>
-              <Button 
-                className="mt-6"
-                onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Abrir Relatório
-              </Button>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Status: Em análise */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
+                <div className="flex items-center gap-3">
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                  <span className="font-medium">Em análise</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({analysis.analysisByStatus.emAnalise.length} casos)
+                  </span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-2 pl-7">
+                  {analysis.analysisByStatus.emAnalise.map((dcu) => {
+                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
+                    return (
+                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
+                        <div className="font-medium text-sm">{dcu.DCU}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
+                      </div>
+                    );
+                  })}
+                  {analysis.analysisByStatus.emAnalise.length === 0 && (
+                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso em análise</div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Status: Aguardando atuação */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
+                <div className="flex items-center gap-3">
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                  <span className="font-medium">Aguardando atuação</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({analysis.analysisByStatus.aguardandoAtuacao.length} casos)
+                  </span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-2 pl-7">
+                  {analysis.analysisByStatus.aguardandoAtuacao.map((dcu) => {
+                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
+                    return (
+                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
+                        <div className="font-medium text-sm">{dcu.DCU}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
+                      </div>
+                    );
+                  })}
+                  {analysis.analysisByStatus.aguardandoAtuacao.length === 0 && (
+                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso aguardando atuação</div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Status: Solucionado */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
+                <div className="flex items-center gap-3">
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                  <span className="font-medium">Solucionado</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({analysis.analysisByStatus.solucionado.length} casos)
+                  </span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-2 pl-7">
+                  {analysis.analysisByStatus.solucionado.map((dcu) => {
+                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
+                    return (
+                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
+                        <div className="font-medium text-sm">{dcu.DCU}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
+                      </div>
+                    );
+                  })}
+                  {analysis.analysisByStatus.solucionado.length === 0 && (
+                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso solucionado</div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </Card>
       </div>
