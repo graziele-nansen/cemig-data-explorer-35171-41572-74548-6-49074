@@ -30,7 +30,13 @@ interface DCUDashboardProps {
 const getReasonForDCU = (dcu: DCUData, latestMeterColumn: string): string => {
   const status = dcu.Status?.toLowerCase();
   const meterValue = dcu[latestMeterColumn];
-  const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+  const hasNoMeters = meterValue !== undefined && (
+    meterValue === '0' || 
+    meterValue === '' || 
+    meterValue === '#N/D' || 
+    parseInt(meterValue) === 0 || 
+    isNaN(parseInt(meterValue))
+  );
   
   if (status === 'não registrado') {
     return 'Status da DCU é não registrado';
@@ -73,14 +79,26 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     // DCUs com 0 medidores na última data
     const noMeters = data.filter(d => {
       const meterValue = d[latestMeterColumn];
-      return meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+      return meterValue !== undefined && (
+        meterValue === '0' || 
+        meterValue === '' || 
+        meterValue === '#N/D' || 
+        parseInt(meterValue) === 0 || 
+        isNaN(parseInt(meterValue))
+      );
     });
 
     // DCUs online com 0 medidores na última data
     const onlineNoMeters = data.filter(d => {
       const meterValue = d[latestMeterColumn];
       const isOnline = d.Status && d.Status.toLowerCase() === 'online';
-      const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+      const hasNoMeters = meterValue !== undefined && (
+        meterValue === '0' || 
+        meterValue === '' || 
+        meterValue === '#N/D' || 
+        parseInt(meterValue) === 0 || 
+        isNaN(parseInt(meterValue))
+      );
       return isOnline && hasNoMeters;
     });
 
@@ -101,7 +119,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     const onlineNoMetersAttention = data.filter(d => {
       const status = d.Status?.toLowerCase();
       const meterValue = d[latestMeterColumn];
-      const hasNoMeters = meterValue !== undefined && (meterValue === '0' || meterValue === '' || parseInt(meterValue) === 0);
+      const hasNoMeters = meterValue !== undefined && (
+        meterValue === '0' || 
+        meterValue === '' || 
+        meterValue === '#N/D' || 
+        parseInt(meterValue) === 0 || 
+        isNaN(parseInt(meterValue))
+      );
       return status === 'online' && hasNoMeters;
     });
 
