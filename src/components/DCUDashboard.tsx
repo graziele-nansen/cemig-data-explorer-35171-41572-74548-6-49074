@@ -436,7 +436,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <div ref={mapContainer} className="h-[400px] rounded-lg" />
       </Card>
 
-      {/* Terceira linha: DCUs por Status e Casos em Análise */}
+      {/* Terceira linha: DCUs por Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DCUs por Status */}
         <Card className="p-6 border border-border bg-card">
@@ -477,141 +477,167 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </ResponsiveContainer>
         </Card>
 
-        {/* Casos em Análise */}
+        {/* Casos de Atenção */}
         <Card className="p-6 border border-border bg-card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Casos em Análise
-            </h3>
-            <Button 
-              size="sm"
-              onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Relatório
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {/* Status: Identificado */}
-            <Collapsible>
-              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="h-4 w-4 transition-transform" />
-                  <span className="font-medium">Identificado</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({analysis.analysisByStatus.identificado.length} casos)
-                  </span>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <div className="space-y-2 pl-7">
-                  {analysis.analysisByStatus.identificado.map((dcu) => {
-                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
-                    return (
-                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
-                        <div className="font-medium text-sm">{dcu.DCU}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
-                      </div>
-                    );
-                  })}
-                  {analysis.analysisByStatus.identificado.length === 0 && (
-                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso identificado</div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Status: Em análise */}
-            <Collapsible>
-              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="h-4 w-4 transition-transform" />
-                  <span className="font-medium">Em análise</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({analysis.analysisByStatus.emAnalise.length} casos)
-                  </span>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <div className="space-y-2 pl-7">
-                  {analysis.analysisByStatus.emAnalise.map((dcu) => {
-                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
-                    return (
-                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
-                        <div className="font-medium text-sm">{dcu.DCU}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
-                      </div>
-                    );
-                  })}
-                  {analysis.analysisByStatus.emAnalise.length === 0 && (
-                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso em análise</div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Status: Aguardando atuação */}
-            <Collapsible>
-              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="h-4 w-4 transition-transform" />
-                  <span className="font-medium">Aguardando atuação</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({analysis.analysisByStatus.aguardandoAtuacao.length} casos)
-                  </span>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <div className="space-y-2 pl-7">
-                  {analysis.analysisByStatus.aguardandoAtuacao.map((dcu) => {
-                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
-                    return (
-                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
-                        <div className="font-medium text-sm">{dcu.DCU}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
-                      </div>
-                    );
-                  })}
-                  {analysis.analysisByStatus.aguardandoAtuacao.length === 0 && (
-                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso aguardando atuação</div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Status: Solucionado */}
-            <Collapsible>
-              <CollapsibleTrigger className="w-full flex items-center justify-between p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="h-4 w-4 transition-transform" />
-                  <span className="font-medium">Solucionado</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({analysis.analysisByStatus.solucionado.length} casos)
-                  </span>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <div className="space-y-2 pl-7">
-                  {analysis.analysisByStatus.solucionado.map((dcu) => {
-                    const reason = getReasonForDCU(dcu, analysis.latestMeterColumn);
-                    return (
-                      <div key={dcu.DCU} className="p-3 rounded-md bg-background/30 border border-border/50">
-                        <div className="font-medium text-sm">{dcu.DCU}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{reason}</div>
-                      </div>
-                    );
-                  })}
-                  {analysis.analysisByStatus.solucionado.length === 0 && (
-                    <div className="text-sm text-muted-foreground italic p-3">Nenhum caso solucionado</div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Casos de Atenção
+          </h3>
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">DCUs Offline</span>
+                <span className="text-2xl font-bold text-destructive">{analysis.offlineDCUs}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">DCUs Não registradas</span>
+                <span className="text-2xl font-bold text-warning">{analysis.notRegisteredDCUs}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">DCUs Online sem medidores</span>
+                <span className="text-2xl font-bold text-primary">{analysis.onlineNoMetersAttention.length}</span>
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-sm text-muted-foreground mb-2">Total</div>
+              <div className="text-5xl font-bold text-primary">
+                {((analysis.offlineDCUs + analysis.notRegisteredDCUs + analysis.onlineNoMetersAttention.length) / analysis.totalDCUs * 100).toFixed(1)}%
+              </div>
+            </div>
           </div>
         </Card>
       </div>
+
+      {/* Casos em Análise - Kanban Style */}
+      <Card className="p-6 border border-border bg-card">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-semibold flex items-center gap-2">
+            <MessageSquare className="h-6 w-6 text-primary" />
+            Casos em Análise
+          </h3>
+          <Button 
+            size="sm"
+            onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Relatório
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Identificado */}
+          <div className="flex flex-col">
+            <div className="bg-muted p-3 rounded-t-lg border-b-2 border-primary">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Identificado</span>
+                <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                  {analysis.analysisByStatus.identificado.length}
+                </span>
+              </div>
+            </div>
+            <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-auto space-y-2">
+              {analysis.analysisByStatus.identificado.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+              ) : (
+                analysis.analysisByStatus.identificado.map((dcu) => (
+                  <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono font-semibold text-primary text-sm">{dcu.DCU}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getReasonForDCU(dcu, analysis.latestMeterColumn)}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Em análise */}
+          <div className="flex flex-col">
+            <div className="bg-muted p-3 rounded-t-lg border-b-2 border-warning">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Em análise</span>
+                <span className="text-sm bg-warning text-warning-foreground px-2 py-1 rounded-full">
+                  {analysis.analysisByStatus.emAnalise.length}
+                </span>
+              </div>
+            </div>
+            <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-auto space-y-2">
+              {analysis.analysisByStatus.emAnalise.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+              ) : (
+                analysis.analysisByStatus.emAnalise.map((dcu) => (
+                  <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono font-semibold text-primary text-sm">{dcu.DCU}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getReasonForDCU(dcu, analysis.latestMeterColumn)}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Aguardando atuação */}
+          <div className="flex flex-col">
+            <div className="bg-muted p-3 rounded-t-lg border-b-2 border-amber-500">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Aguardando atuação</span>
+                <span className="text-sm bg-amber-500 text-white px-2 py-1 rounded-full">
+                  {analysis.analysisByStatus.aguardandoAtuacao.length}
+                </span>
+              </div>
+            </div>
+            <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-auto space-y-2">
+              {analysis.analysisByStatus.aguardandoAtuacao.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+              ) : (
+                analysis.analysisByStatus.aguardandoAtuacao.map((dcu) => (
+                  <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono font-semibold text-primary text-sm">{dcu.DCU}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getReasonForDCU(dcu, analysis.latestMeterColumn)}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Solucionado */}
+          <div className="flex flex-col">
+            <div className="bg-muted p-3 rounded-t-lg border-b-2 border-success">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Solucionado</span>
+                <span className="text-sm bg-success text-success-foreground px-2 py-1 rounded-full">
+                  {analysis.analysisByStatus.solucionado.length}
+                </span>
+              </div>
+            </div>
+            <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-auto space-y-2">
+              {analysis.analysisByStatus.solucionado.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+              ) : (
+                analysis.analysisByStatus.solucionado.map((dcu) => (
+                  <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono font-semibold text-primary text-sm">{dcu.DCU}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Comportamento normalizado
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* ========== ANÁLISE DE CARGA ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
