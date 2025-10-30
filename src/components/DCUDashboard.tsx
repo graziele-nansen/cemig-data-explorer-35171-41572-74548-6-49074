@@ -161,18 +161,34 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       ? Math.round((totalInStudy / totalAttentionCases) * 100) 
       : 0;
 
+    // Função auxiliar para converter taxa de coleta em número
+    const parseCollectionRate = (value: any): number => {
+      if (!value || value === '#N/D') return 0;
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        return parseFloat(value.replace('%', '').trim());
+      }
+      return 0;
+    };
+
     // Análise de taxa de coleta
-    const dcusWithCollectionRate = data.filter(d => d['Taxa de coleta'] && d['Taxa de coleta'] !== '' && d['Taxa de coleta'] !== '#N/D');
+    const dcusWithCollectionRate = data.filter(d => {
+      const value = d['Taxa de coleta'];
+      return value && value !== '' && value !== '#N/D';
+    });
+    
     const dcusBelow90 = dcusWithCollectionRate.filter(d => {
-      const rate = parseFloat(d['Taxa de coleta']?.replace('%', '') || '0');
+      const rate = parseCollectionRate(d['Taxa de coleta']);
       return !isNaN(rate) && rate < 90;
     });
+    
     const dcusBetween90And95 = dcusWithCollectionRate.filter(d => {
-      const rate = parseFloat(d['Taxa de coleta']?.replace('%', '') || '0');
+      const rate = parseCollectionRate(d['Taxa de coleta']);
       return !isNaN(rate) && rate >= 90 && rate < 95;
     });
+    
     const dcusAbove95 = dcusWithCollectionRate.filter(d => {
-      const rate = parseFloat(d['Taxa de coleta']?.replace('%', '') || '0');
+      const rate = parseCollectionRate(d['Taxa de coleta']);
       return !isNaN(rate) && rate >= 95;
     });
 
@@ -186,7 +202,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     const top10LowestCollectionRate = dcusWithCollectionRate
       .map(d => ({
         dcu: d.DCU,
-        rate: parseFloat(d['Taxa de coleta']?.replace('%', '') || '0'),
+        rate: parseCollectionRate(d['Taxa de coleta']),
         meters: parseInt(d[latestMeterColumn] || '0'),
       }))
       .filter(d => !isNaN(d.rate))

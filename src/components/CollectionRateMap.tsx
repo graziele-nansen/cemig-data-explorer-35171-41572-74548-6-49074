@@ -62,7 +62,12 @@ export const CollectionRateMap = ({ data, latestMeterColumn, mapboxToken }: Coll
         return;
       }
       
-      const collectionRate = parseFloat(dcu['Taxa de coleta']?.replace('%', '') || '0');
+      const rateValue = dcu['Taxa de coleta'];
+      const collectionRate = typeof rateValue === 'number' 
+        ? rateValue 
+        : typeof rateValue === 'string'
+        ? parseFloat(rateValue.replace('%', '').trim())
+        : 0;
       
       let color = 'hsl(var(--success))'; // >= 95% (verde)
       if (collectionRate < 90) {
