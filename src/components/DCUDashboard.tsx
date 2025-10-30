@@ -7,7 +7,7 @@ import { CollectionRateMap } from './CollectionRateMap';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, TrendingDown, Power, BarChart3, MessageSquare, Activity, MapPin, ExternalLink, ChevronDown } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, LineChart, Line, ScatterChart, Scatter, ZAxis } from 'recharts';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -62,6 +62,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
   const [visibleDCUs, setVisibleDCUs] = useState<Set<string>>(new Set());
+  const [selectedCollectionDCU, setSelectedCollectionDCU] = useState<string | null>(null);
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -198,8 +199,12 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       { name: 'Acima de 95%', value: dcusAbove95.length, color: 'hsl(var(--success))' },
     ].filter(s => s.value > 0);
 
-    // Top 10 DCUs com menor taxa de coleta
+    // Top 10 DCUs com menor taxa de coleta (excluindo "Em Estudo")
     const top10LowestCollectionRate = dcusWithCollectionRate
+      .filter(d => {
+        const comment = d.Comentário?.toLowerCase().trim();
+        return comment !== 'em estudo';
+      })
       .map(d => ({
         dcu: d.DCU,
         rate: parseCollectionRate(d['Taxa de coleta']),
@@ -214,6 +219,19 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       taxa: d.rate,
       medidores: d.meters,
     }));
+
+    // Dados para gráfico de dispersão (Carga vs Taxa de Coleta)
+    const scatterData = dcusWithCollectionRate
+      .filter(d => {
+        const comment = d.Comentário?.toLowerCase().trim();
+        return comment !== 'em estudo';
+      })
+      .map(d => ({
+        dcu: d.DCU,
+        taxa: parseCollectionRate(d['Taxa de coleta']),
+        carga: parseInt(d[latestMeterColumn] || '0'),
+      }))
+      .filter(d => !isNaN(d.taxa) && d.carga > 0);
 
     // Análise histórica: calcular média e desvios
     const dcusWithHistory = data.map(dcu => {
@@ -320,6 +338,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       collectionRateData,
       top10LowestCollectionRate,
       top10CollectionRateChartData,
+      scatterData,
     };
   }, [data]);
 
@@ -908,77 +927,6 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         )}
       </div>
 
-      {/* Quarta linha: Tabela com Filtro por Comentário */}
-      {analysis.comments.length > 0 && (
-        <Card className="p-6 border border-border bg-card">
-          <h3 className="text-xl font-semibold mb-4">Filtrar por Comentário</h3>
-          <Select value={selectedComment} onValueChange={setSelectedComment}>
-            <SelectTrigger className="w-full md:w-[300px]">
-              <SelectValue placeholder="Selecione um comentário" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos ({analysis.latestData.length} DCUs)</SelectItem>
-              {analysis.comments.map((name) => {
-                const count = analysis.latestData.filter(d => d.Comentário === name).length;
-                return (
-                  <SelectItem key={name} value={name}>
-                    {name} ({count} DCUs)
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </Card>
-      )}
-
-      <Card className="p-6 border border-border bg-card">
-        <h3 className="text-xl font-semibold mb-4">
-          Detalhes das DCUs {selectedComment !== 'all' && `(${selectedComment})`}
-        </h3>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-base">DCU</TableHead>
-                <TableHead className="text-base">Status</TableHead>
-                <TableHead className="text-base">LAT</TableHead>
-                <TableHead className="text-base">LONG</TableHead>
-                <TableHead className="text-base">Medidores ({analysis.latestDate})</TableHead>
-                <TableHead className="text-base">Comentário</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.slice(0, 20).map((dcu, idx) => (
-                <TableRow key={idx}>
-                  <TableCell className="font-mono text-sm">{dcu.DCU}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      dcu.Status && dcu.Status.toLowerCase() === 'online' 
-                        ? 'bg-success/20 text-success' 
-                        : dcu.Status && dcu.Status.toLowerCase() === 'offline'
-                        ? 'bg-destructive/20 text-destructive'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {dcu.Status || 'Unknown'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm">{dcu.LAT || '-'}</TableCell>
-                  <TableCell className="text-sm">{dcu.LONG || '-'}</TableCell>
-                  <TableCell className="text-sm">{dcu[analysis.latestMeterColumn] || '0'}</TableCell>
-                  <TableCell className="text-base text-muted-foreground">
-                    {dcu.Comentário || '-'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredData.length > 20 && (
-            <p className="text-base text-muted-foreground text-center mt-4">
-              Mostrando 20 de {filteredData.length} DCUs
-            </p>
-          )}
-        </div>
-      </Card>
 
       {/* ========== ANÁLISE DE TAXA DE COLETA DIÁRIA ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
@@ -993,13 +941,40 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         Esta seção apresenta a taxa de coleta diária reportada pelo MDC. A falha ou sucesso de cada medidor impacta diretamente na taxa da DCU à qual ele está conectado.
       </p>
 
-      {/* Primeira linha: Gráfico Donut e Mapa de Taxa de Coleta */}
+      {/* Primeira linha: Mapa de Taxa de Coleta (largura completa) */}
+      <Card className="p-6 border border-border bg-card">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-primary" />
+          Mapa de Taxa de Coleta
+        </h3>
+        <div className="flex gap-6 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
+            <span className="text-sm">≥ 95%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--warning))' }}></div>
+            <span className="text-sm">90% - 95%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
+            <span className="text-sm">&lt; 90%</span>
+          </div>
+        </div>
+        <CollectionRateMap 
+          data={analysis.dcusWithCollectionRate}
+          latestMeterColumn={analysis.latestMeterColumn}
+          mapboxToken={mapboxToken}
+        />
+      </Card>
+
+      {/* Segunda linha: Gráfico Donut e Painel de Indicadores */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico Donut - Taxa de Coleta */}
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Taxa de Coleta por DCU
+            Distribuição de Taxa de Coleta
           </h3>
           {analysis.collectionRateData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -1050,48 +1025,57 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           )}
         </Card>
 
-        {/* Mapa de Taxa de Coleta */}
+        {/* Painel de Indicadores */}
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            Mapa de Taxa de Coleta
+            <Activity className="h-5 w-5 text-primary" />
+            Indicadores de Taxa de Coleta
           </h3>
-          <div className="flex gap-6 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
-              <span className="text-sm">≥ 95%</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-destructive"></div>
+                <span className="font-medium">Taxa de sucesso abaixo de 90%</span>
+              </div>
+              <span className="text-2xl font-bold text-destructive">{analysis.dcusBelow90.length} casos</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--warning))' }}></div>
-              <span className="text-sm">90% - 95%</span>
+            <div className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-warning"></div>
+                <span className="font-medium">Taxa de sucesso entre 90% e 95%</span>
+              </div>
+              <span className="text-2xl font-bold text-warning">{analysis.dcusBetween90And95.length} casos</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
-              <span className="text-sm">&lt; 90%</span>
+            <div className="flex items-center justify-between p-4 bg-success/10 rounded-lg border border-success/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-success"></div>
+                <span className="font-medium">Taxa de sucesso acima de 95%</span>
+              </div>
+              <span className="text-2xl font-bold text-success">{analysis.dcusAbove95.length} casos</span>
             </div>
           </div>
-          <CollectionRateMap 
-            data={analysis.dcusWithCollectionRate}
-            latestMeterColumn={analysis.latestMeterColumn}
-            mapboxToken={mapboxToken}
-          />
         </Card>
       </div>
 
-      {/* Segunda linha: Top 10 DCUs com Menor Taxa e Gráfico */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lista Top 10 */}
-        <Card className="p-6 border border-border bg-card">
+      {/* Terceira linha: Top 10 DCUs com Menor Taxa e Gráfico Coleta vs Carga */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Lista Top 10 - 2 colunas */}
+        <Card className="p-6 border border-border bg-card lg:col-span-2">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-destructive" />
-            Top 10 DCUs com Menor Taxa de Coleta
+            Top 10 DCUs
           </h3>
           {analysis.top10LowestCollectionRate.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {analysis.top10LowestCollectionRate.map((dcuData, idx) => (
                 <div 
                   key={idx} 
-                  className="flex items-center justify-between p-3 rounded bg-background/50 hover:bg-muted/50 transition-colors"
+                  className={`flex items-center justify-between p-3 rounded transition-all cursor-pointer ${
+                    selectedCollectionDCU === dcuData.dcu 
+                      ? 'bg-primary/20 border border-primary' 
+                      : 'bg-background/50 hover:bg-muted/50'
+                  }`}
+                  onClick={() => setSelectedCollectionDCU(selectedCollectionDCU === dcuData.dcu ? null : dcuData.dcu)}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-lg font-bold text-muted-foreground">#{idx + 1}</span>
@@ -1118,15 +1102,18 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           )}
         </Card>
 
-        {/* Gráfico Comparativo */}
-        <Card className="p-6 border border-border bg-card">
+        {/* Gráfico Coleta vs Carga - 3 colunas */}
+        <Card className="p-6 border border-border bg-card lg:col-span-3">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Taxa vs Quantidade de Medidores
+            Coleta vs Carga
           </h3>
           {analysis.top10CollectionRateChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={analysis.top10CollectionRateChartData}>
+              <BarChart data={selectedCollectionDCU 
+                ? analysis.top10CollectionRateChartData.filter(d => d.dcu === selectedCollectionDCU)
+                : analysis.top10CollectionRateChartData
+              }>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
                   dataKey="dcu" 
@@ -1145,7 +1132,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   yAxisId="right"
                   orientation="right"
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  label={{ value: 'Medidores', angle: 90, position: 'insideRight', fill: 'hsl(var(--muted-foreground))' }}
+                  label={{ value: 'Carga (Medidores)', angle: 90, position: 'insideRight', fill: 'hsl(var(--muted-foreground))' }}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -1157,7 +1144,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   }}
                   formatter={(value: any, name: string) => {
                     if (name === 'taxa') return [`${value.toFixed(1)}%`, 'Taxa de Coleta'];
-                    if (name === 'medidores') return [value, 'Medidores'];
+                    if (name === 'medidores') return [value, 'Carga'];
                     return [value, name];
                   }}
                 />
@@ -1166,14 +1153,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   dataKey="taxa" 
                   fill="hsl(var(--primary))"
                   radius={[8, 8, 0, 0]}
-                  name="Taxa de Coleta"
+                  name="taxa"
                 />
                 <Bar 
                   yAxisId="right"
                   dataKey="medidores" 
                   fill="hsl(var(--success))"
                   radius={[8, 8, 0, 0]}
-                  name="Medidores"
+                  name="medidores"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -1184,6 +1171,72 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           )}
         </Card>
       </div>
+
+      {/* Quarta linha: Gráfico de Dispersão - Carga vs Taxa de Coleta */}
+      <Card className="p-6 border border-border bg-card">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Activity className="h-5 w-5 text-primary" />
+          Dispersão: Carga vs Taxa de Coleta
+        </h3>
+        {analysis.scatterData && analysis.scatterData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+              <XAxis 
+                type="number" 
+                dataKey="taxa" 
+                name="Taxa de Coleta"
+                label={{ value: 'Taxa de Coleta (%)', position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                domain={[0, 100]}
+              />
+              <YAxis 
+                type="number" 
+                dataKey="carga" 
+                name="Carga"
+                label={{ value: 'Carga (Medidores)', angle: -90, position: 'insideLeft', offset: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <ZAxis range={[50, 400]} />
+              <Tooltip 
+                cursor={{ strokeDasharray: '3 3' }}
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: 'white'
+                }}
+                formatter={(value: any, name: string) => {
+                  if (name === 'Taxa de Coleta') return [`${value.toFixed(1)}%`, name];
+                  return [value, name];
+                }}
+                labelFormatter={(label) => `DCU: ${label}`}
+              />
+              <Scatter 
+                name="DCUs" 
+                data={analysis.scatterData} 
+                fill="hsl(var(--primary))"
+              >
+                {analysis.scatterData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`}
+                    fill={
+                      entry.taxa < 90 ? 'hsl(var(--destructive))' :
+                      entry.taxa < 95 ? 'hsl(var(--warning))' :
+                      'hsl(var(--success))'
+                    }
+                  />
+                ))}
+              </Scatter>
+            </ScatterChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-[400px]">
+            <p className="text-muted-foreground">Dados de dispersão não disponíveis</p>
+          </div>
+        )}
+      </Card>
 
       {/* ========== ANÁLISE HISTÓRICA ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
