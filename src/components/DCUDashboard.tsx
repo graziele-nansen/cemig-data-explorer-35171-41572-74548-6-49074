@@ -927,285 +927,6 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         )}
       </div>
 
-
-      {/* ========== ANÁLISE DE TAXA DE COLETA DIÁRIA ========== */}
-      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">
-            Análise de Taxa de Coleta Diária
-          </h2>
-        </div>
-      </div>
-
-      <p className="text-muted-foreground leading-relaxed">
-        Esta seção apresenta a taxa de coleta diária reportada pelo MDC. A falha ou sucesso de cada medidor impacta diretamente na taxa da DCU à qual ele está conectado.
-      </p>
-
-      {/* Primeira linha: Mapa de Taxa de Coleta (largura completa) */}
-      <Card className="p-6 border border-border bg-card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          Mapa de Taxa de Coleta
-        </h3>
-        <div className="flex gap-6 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
-            <span className="text-sm">≥ 98%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--warning))' }}></div>
-            <span className="text-sm">95% - 98%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
-            <span className="text-sm">&lt; 95%</span>
-          </div>
-        </div>
-        <CollectionRateMap 
-          data={analysis.dcusWithCollectionRate}
-          latestMeterColumn={analysis.latestMeterColumn}
-          mapboxToken={mapboxToken}
-        />
-      </Card>
-
-      {/* Segunda linha: Gráfico Donut e Painel de Indicadores */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico Donut - Taxa de Coleta */}
-        <Card className="p-6 border border-border bg-card">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            Distribuição de Taxa de Coleta
-          </h3>
-          {analysis.collectionRateData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={analysis.collectionRateData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {analysis.collectionRateData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    color: 'white'
-                  }} 
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="text-2xl font-bold"
-                  fill="hsl(var(--foreground))"
-                >
-                  {analysis.dcusWithCollectionRate.length}
-                </text>
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-[300px]">
-              <p className="text-muted-foreground">Dados de taxa de coleta não disponíveis</p>
-            </div>
-          )}
-        </Card>
-
-        {/* Painel de Indicadores */}
-        <Card className="p-6 border border-border bg-card">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            Indicadores de Taxa de Coleta
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                <span className="font-medium">Taxa de sucesso abaixo de 95%</span>
-              </div>
-              <span className="text-2xl font-bold text-destructive">{analysis.dcusBelow95.length} casos</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-warning"></div>
-                <span className="font-medium">Taxa de sucesso entre 95% e 98%</span>
-              </div>
-              <span className="text-2xl font-bold text-warning">{analysis.dcusBetween95And98.length} casos</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-success/10 rounded-lg border border-success/20">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-success"></div>
-                <span className="font-medium">Taxa de sucesso acima de 98%</span>
-              </div>
-              <span className="text-2xl font-bold text-success">{analysis.dcusAbove98.length} casos</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Gráfico de Dispersão - Carga vs Taxa de Coleta */}
-      <Card className="p-6 border border-border bg-card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            Dispersão: Carga vs Taxa de Coleta
-          </h3>
-          <div className="flex gap-4 items-center">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={React.useMemo(() => {
-                  const showOverloaded = (window as any).__showOverloaded || false;
-                  return showOverloaded;
-                }, [])}
-                onChange={(e) => {
-                  (window as any).__showOverloaded = e.target.checked;
-                  const event = new Event('filterChange');
-                  window.dispatchEvent(event);
-                }}
-                className="w-4 h-4 rounded border-border"
-              />
-              Região de DCUs sobrecarregadas (&gt;850)
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={React.useMemo(() => {
-                  const showLowCollection = (window as any).__showLowCollection || false;
-                  return showLowCollection;
-                }, [])}
-                onChange={(e) => {
-                  (window as any).__showLowCollection = e.target.checked;
-                  const event = new Event('filterChange');
-                  window.dispatchEvent(event);
-                }}
-                className="w-4 h-4 rounded border-border"
-              />
-              Região de taxa de coleta baixa (&lt;95%)
-            </label>
-          </div>
-        </div>
-        
-        {(() => {
-          const [showOverloaded, setShowOverloaded] = React.useState((window as any).__showOverloaded || false);
-          const [showLowCollection, setShowLowCollection] = React.useState((window as any).__showLowCollection || false);
-          
-          React.useEffect(() => {
-            const handler = () => {
-              setShowOverloaded((window as any).__showOverloaded || false);
-              setShowLowCollection((window as any).__showLowCollection || false);
-            };
-            window.addEventListener('filterChange', handler);
-            return () => window.removeEventListener('filterChange', handler);
-          }, []);
-          
-          const filteredScatterData = React.useMemo(() => {
-            let filtered = analysis.scatterData;
-            if (showOverloaded) {
-              filtered = filtered.filter(d => d.carga > 850);
-            }
-            if (showLowCollection) {
-              filtered = filtered.filter(d => d.taxa < 95);
-            }
-            return filtered;
-          }, [showOverloaded, showLowCollection]);
-          
-          const overloadedWithLowCollection = analysis.scatterData.filter(d => d.taxa < 95 && d.carga > 850).length;
-          const totalLowCollection = analysis.dcusBelow95.length;
-          
-          return (
-            <>
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                <p className="text-sm font-medium">
-                  Das <span className="font-bold text-blue-600">{totalLowCollection} DCUs com problema de coleta</span> (abaixo de 95%), 
-                  <span className="font-bold text-blue-600 ml-1">{overloadedWithLowCollection} estão sobrecarregadas</span> (acima de 850 medidores)
-                </p>
-              </div>
-              {filteredScatterData && filteredScatterData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis 
-                      type="number" 
-                      dataKey="taxa" 
-                      name="Taxa de Coleta"
-                      label={{ value: 'Taxa de Coleta (%)', position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      domain={[0, 100]}
-                    />
-                    <YAxis 
-                      type="number" 
-                      dataKey="carga" 
-                      name="Carga"
-                      label={{ value: 'Carga (Medidores)', angle: -90, position: 'insideLeft', offset: 10, fill: 'hsl(var(--muted-foreground))' }}
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    />
-                    <ZAxis range={[50, 400]} />
-                    <Tooltip 
-                      cursor={{ strokeDasharray: '3 3' }}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: 'white'
-                      }}
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
-                              <p className="font-semibold text-foreground mb-1">{data.dcu}</p>
-                              <p className="text-sm text-muted-foreground">Taxa: {data.taxa.toFixed(2)}%</p>
-                              <p className="text-sm text-muted-foreground">Carga: {data.carga} medidores</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Scatter 
-                      name="DCUs" 
-                      data={filteredScatterData} 
-                      fill="hsl(var(--primary))"
-                    >
-                      {filteredScatterData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          fill={
-                            entry.taxa < 95 ? 'hsl(var(--destructive))' :
-                            entry.taxa < 98 ? 'hsl(var(--warning))' :
-                            'hsl(var(--success))'
-                          }
-                        />
-                      ))}
-                    </Scatter>
-                  </ScatterChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[400px]">
-                  <p className="text-muted-foreground">Nenhum dado disponível com os filtros selecionados</p>
-                </div>
-              )}
-            </>
-          );
-        })()}
-      </Card>
-
       {/* ========== ANÁLISE HISTÓRICA ========== */}
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
         <div>
@@ -1338,6 +1059,294 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </div>
         </Card>
       </div>
+
+      {/* ========== ANÁLISE DE TAXA DE COLETA DIÁRIA ========== */}
+      <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            Análise de Taxa de Coleta Diária
+          </h2>
+        </div>
+      </div>
+
+      <p className="text-muted-foreground leading-relaxed">
+        Esta seção apresenta a taxa de coleta diária reportada pelo MDC. A falha ou sucesso de cada medidor impacta diretamente na taxa da DCU à qual ele está conectado.
+      </p>
+
+      {/* Primeira linha: Mapa de Taxa de Coleta (largura completa) */}
+      <Card className="p-6 border border-border bg-card">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-primary" />
+          Mapa de Taxa de Coleta
+        </h3>
+        <div className="flex gap-6 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
+            <span className="text-sm">≥ 98%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--warning))' }}></div>
+            <span className="text-sm">95% - 98%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
+            <span className="text-sm">&lt; 95%</span>
+          </div>
+        </div>
+        <CollectionRateMap 
+          data={analysis.dcusWithCollectionRate}
+          latestMeterColumn={analysis.latestMeterColumn}
+          mapboxToken={mapboxToken}
+        />
+      </Card>
+
+      {/* Segunda linha: Gráfico Donut e Painel de Indicadores */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico Donut - Taxa de Coleta */}
+        <Card className="p-6 border border-border bg-card">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Distribuição de Taxa de Coleta
+          </h3>
+          {analysis.collectionRateData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analysis.collectionRateData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {analysis.collectionRateData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    color: 'white'
+                  }} 
+                />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="text-2xl font-bold"
+                  fill="hsl(var(--foreground))"
+                >
+                  {analysis.dcusWithCollectionRate.length}
+                </text>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px]">
+              <p className="text-muted-foreground">Dados de taxa de coleta não disponíveis</p>
+            </div>
+          )}
+        </Card>
+
+        {/* Painel de Indicadores */}
+        <Card className="p-6 border border-border bg-card">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Indicadores de Taxa de Coleta
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-destructive"></div>
+                <span className="font-medium">Taxa de sucesso abaixo de 95%</span>
+              </div>
+              <span className="text-2xl font-bold text-destructive">{analysis.dcusBelow95.length} DCUs</span>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-warning"></div>
+                <span className="font-medium">Taxa de sucesso entre 95% e 98%</span>
+              </div>
+              <span className="text-2xl font-bold text-warning">{analysis.dcusBetween95And98.length} DCUs</span>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-success/10 rounded-lg border border-success/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-success"></div>
+                <span className="font-medium">Taxa de sucesso acima de 98%</span>
+              </div>
+              <span className="text-2xl font-bold text-success">{analysis.dcusAbove98.length} DCUs</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Gráfico de Dispersão - Carga vs Taxa de Coleta */}
+      <Card className="p-6 border border-border bg-card">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Dispersão: Carga vs Taxa de Coleta
+          </h3>
+          <div className="flex gap-4 items-center">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={React.useMemo(() => {
+                  const showOverloaded = (window as any).__showOverloaded || false;
+                  return showOverloaded;
+                }, [])}
+                onChange={(e) => {
+                  (window as any).__showOverloaded = e.target.checked;
+                  const event = new Event('filterChange');
+                  window.dispatchEvent(event);
+                }}
+                className="w-4 h-4 rounded border-border"
+              />
+              Região de DCUs sobrecarregadas (&gt;850)
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={React.useMemo(() => {
+                  const showLowCollection = (window as any).__showLowCollection || false;
+                  return showLowCollection;
+                }, [])}
+                onChange={(e) => {
+                  (window as any).__showLowCollection = e.target.checked;
+                  const event = new Event('filterChange');
+                  window.dispatchEvent(event);
+                }}
+                className="w-4 h-4 rounded border-border"
+              />
+              Região de taxa de coleta baixa (&lt;95%)
+            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                (window as any).__showOverloaded = false;
+                (window as any).__showLowCollection = false;
+                const event = new Event('filterChange');
+                window.dispatchEvent(event);
+              }}
+            >
+              Voltar ao gráfico original
+            </Button>
+          </div>
+        </div>
+        
+        {(() => {
+          const [showOverloaded, setShowOverloaded] = React.useState((window as any).__showOverloaded || false);
+          const [showLowCollection, setShowLowCollection] = React.useState((window as any).__showLowCollection || false);
+          
+          React.useEffect(() => {
+            const handler = () => {
+              setShowOverloaded((window as any).__showOverloaded || false);
+              setShowLowCollection((window as any).__showLowCollection || false);
+            };
+            window.addEventListener('filterChange', handler);
+            return () => window.removeEventListener('filterChange', handler);
+          }, []);
+          
+          const filteredScatterData = React.useMemo(() => {
+            return analysis.scatterData;
+          }, []);
+          
+          const overloadedWithLowCollection = analysis.scatterData.filter(d => d.taxa < 95 && d.carga > 850).length;
+          const totalLowCollection = analysis.dcusBelow95.length;
+          
+          // Calculate dynamic domains based on filters
+          const xDomain: [number, number] = showLowCollection ? [0, 95] : [0, 100];
+          const yDomain: [number, number] | ['auto', 'auto'] = showOverloaded ? [850, Math.max(...analysis.scatterData.map(d => d.carga))] : ['auto', 'auto'];
+          
+          return (
+            <>
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                <p className="text-sm font-medium">
+                  Das <span className="font-bold text-blue-600">{totalLowCollection} DCUs com problema de coleta</span> (abaixo de 95%), 
+                  <span className="font-bold text-blue-600 ml-1">{overloadedWithLowCollection} estão sobrecarregadas</span> (acima de 850 medidores)
+                </p>
+              </div>
+              {filteredScatterData && filteredScatterData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 80 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis 
+                      type="number" 
+                      dataKey="taxa" 
+                      name="Taxa de Coleta"
+                      label={{ value: 'Taxa de coleta (% sucessos)', position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      domain={xDomain}
+                    />
+                    <YAxis 
+                      type="number" 
+                      dataKey="carga" 
+                      name="Carga"
+                      label={{ value: 'Carga (Qtd. medidores)', angle: -90, position: 'insideLeft', offset: 0, fill: 'hsl(var(--muted-foreground))' }}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      domain={yDomain}
+                    />
+                    <ZAxis range={[50, 400]} />
+                    <Tooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        color: 'white'
+                      }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
+                              <p className="font-semibold text-foreground mb-1">{data.dcu}</p>
+                              <p className="text-sm text-muted-foreground">Taxa: {data.taxa.toFixed(2)}%</p>
+                              <p className="text-sm text-muted-foreground">Carga: {data.carga} medidores</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Scatter 
+                      name="DCUs" 
+                      data={filteredScatterData} 
+                      fill="hsl(var(--primary))"
+                    >
+                      {filteredScatterData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`}
+                          fill={
+                            entry.taxa < 95 ? 'hsl(var(--destructive))' :
+                            entry.taxa < 98 ? 'hsl(var(--warning))' :
+                            'hsl(var(--success))'
+                          }
+                        />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[400px]">
+                  <p className="text-muted-foreground">Nenhum dado disponível com os filtros selecionados</p>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </Card>
 
       {/* Linha divisória antes do rodapé */}
       <div className="relative my-8">
