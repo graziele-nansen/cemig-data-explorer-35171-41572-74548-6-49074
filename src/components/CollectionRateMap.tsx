@@ -69,11 +69,11 @@ export const CollectionRateMap = ({ data, latestMeterColumn, mapboxToken }: Coll
         ? parseFloat(rateValue.replace('%', '').trim())
         : 0;
       
-      let color = 'hsl(var(--success))'; // >= 95% (verde)
-      if (collectionRate < 90) {
-        color = 'hsl(var(--destructive))'; // < 90% (vermelho)
-      } else if (collectionRate < 95) {
-        color = 'hsl(var(--warning))'; // 90-95% (amarelo)
+      let color = 'hsl(var(--success))'; // >= 98% (verde)
+      if (collectionRate < 95) {
+        color = 'hsl(var(--destructive))'; // < 95% (vermelho)
+      } else if (collectionRate < 98) {
+        color = 'hsl(var(--warning))'; // 95-98% (amarelo)
       }
 
       const el = document.createElement('div');
