@@ -63,6 +63,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const [selectedDCUs, setSelectedDCUs] = useState<Set<string>>(new Set());
   const [visibleDCUs, setVisibleDCUs] = useState<Set<string>>(new Set());
   const [selectedCollectionDCU, setSelectedCollectionDCU] = useState<string | null>(null);
+  const [filterOverloaded, setFilterOverloaded] = useState(false);
+  const [filterLowCollection, setFilterLowCollection] = useState(false);
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -1196,86 +1198,50 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             <Activity className="h-5 w-5 text-primary" />
             Dispersão: Carga vs Taxa de Coleta
           </h3>
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-3 items-center">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={React.useMemo(() => {
-                  const showOverloaded = (window as any).__showOverloaded || false;
-                  return showOverloaded;
-                }, [])}
-                onChange={(e) => {
-                  (window as any).__showOverloaded = e.target.checked;
-                  const event = new Event('filterChange');
-                  window.dispatchEvent(event);
-                }}
+                checked={filterOverloaded}
+                onChange={(e) => setFilterOverloaded(e.target.checked)}
                 className="w-4 h-4 rounded border-border"
               />
-              Região de DCUs sobrecarregadas (&gt;850)
+              <span className="whitespace-nowrap">Região de DCUs sobrecarregadas (&gt;850)</span>
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
-                checked={React.useMemo(() => {
-                  const showLowCollection = (window as any).__showLowCollection || false;
-                  return showLowCollection;
-                }, [])}
-                onChange={(e) => {
-                  (window as any).__showLowCollection = e.target.checked;
-                  const event = new Event('filterChange');
-                  window.dispatchEvent(event);
-                }}
+                checked={filterLowCollection}
+                onChange={(e) => setFilterLowCollection(e.target.checked)}
                 className="w-4 h-4 rounded border-border"
               />
-              Região de taxa de coleta baixa (&lt;95%)
+              <span className="whitespace-nowrap">Região de taxa de coleta baixa (&lt;95%)</span>
             </label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                (window as any).__showOverloaded = false;
-                (window as any).__showLowCollection = false;
-                const event = new Event('filterChange');
-                window.dispatchEvent(event);
-              }}
-            >
-              Voltar ao gráfico original
-            </Button>
+            {(filterOverloaded || filterLowCollection) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFilterOverloaded(false);
+                  setFilterLowCollection(false);
+                }}
+              >
+                Voltar ao gráfico original
+              </Button>
+            )}
           </div>
         </div>
         
         {(() => {
-          const [showOverloaded, setShowOverloaded] = React.useState((window as any).__showOverloaded || false);
-          const [showLowCollection, setShowLowCollection] = React.useState((window as any).__showLowCollection || false);
-          
-          React.useEffect(() => {
-            const handler = () => {
-              setShowOverloaded((window as any).__showOverloaded || false);
-              setShowLowCollection((window as any).__showLowCollection || false);
-            };
-            window.addEventListener('filterChange', handler);
-            return () => window.removeEventListener('filterChange', handler);
-          }, []);
-          
-          const filteredScatterData = React.useMemo(() => {
-            return analysis.scatterData;
-          }, []);
-          
-          const overloadedWithLowCollection = analysis.scatterData.filter(d => d.taxa < 95 && d.carga > 850).length;
-          const totalLowCollection = analysis.dcusBelow95.length;
-          
-          // Calculate dynamic domains based on filters
-          const xDomain: [number, number] = showLowCollection ? [0, 95] : [0, 100];
-          const yDomain: [number, number] | ['auto', 'auto'] = showOverloaded ? [850, Math.max(...analysis.scatterData.map(d => d.carga))] : ['auto', 'auto'];
+          // Filtrar dados baseado nos filtros selecionados
+          const filteredScatterData = analysis.scatterData.filter(d => {
+            const passOverloaded = !filterOverloaded || d.carga > 850;
+            const passLowCollection = !filterLowCollection || d.taxa < 95;
+            return passOverloaded && passLowCollection;
+          });
           
           return (
             <>
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                <p className="text-sm font-medium">
-                  Das <span className="font-bold text-blue-600">{totalLowCollection} DCUs com problema de coleta</span> (abaixo de 95%), 
-                  <span className="font-bold text-blue-600 ml-1">{overloadedWithLowCollection} estão sobrecarregadas</span> (acima de 850 medidores)
-                </p>
-              </div>
               {filteredScatterData && filteredScatterData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={400}>
                   <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 80 }}>
@@ -1286,7 +1252,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                       name="Taxa de Coleta"
                       label={{ value: 'Taxa de coleta (% sucessos)', position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
                       tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      domain={xDomain}
+                      domain={[0, 100]}
                     />
                     <YAxis 
                       type="number" 
@@ -1294,7 +1260,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                       name="Carga"
                       label={{ value: 'Carga (Qtd. medidores)', angle: -90, position: 'insideLeft', offset: 0, fill: 'hsl(var(--muted-foreground))' }}
                       tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      domain={yDomain}
+                      domain={['auto', 'auto']}
                     />
                     <ZAxis range={[50, 400]} />
                     <Tooltip 
@@ -1383,15 +1349,29 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="hidden md:block w-px h-24 bg-border"></div>
           
           <div className="flex-1 text-center space-y-2">
-            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Revisor</p>
-            <p className="text-lg font-medium text-foreground">Richard Mariano</p>
-            <a 
-              href="mailto:richard.rezende@nansen.com.br" 
-              className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
-            >
-              richard.rezende@nansen.com.br
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Revisores</p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-lg font-medium text-foreground">Evandro Cabral</p>
+                <a 
+                  href="mailto:evandro.cabral@nansen.com.br" 
+                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+                >
+                  evandro.cabral@nansen.com.br
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              <div>
+                <p className="text-lg font-medium text-foreground">Richard Mariano</p>
+                <a 
+                  href="mailto:richard.rezende@nansen.com.br" 
+                  className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
+                >
+                  richard.rezende@nansen.com.br
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
           </div>
 
           <div className="hidden md:block w-px h-24 bg-border"></div>
