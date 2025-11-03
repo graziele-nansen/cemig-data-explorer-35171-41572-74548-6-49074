@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import nansenLogo from '@/assets/logo-nansen.png';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DCUData {
   DCU: string;
@@ -28,34 +29,8 @@ interface DCUDashboardProps {
   data: DCUData[];
 }
 
-// Função auxiliar para determinar o motivo de uma DCU estar em análise
-const getReasonForDCU = (dcu: DCUData, latestMeterColumn: string): string => {
-  const status = dcu.Status?.toLowerCase();
-  const meterValue = dcu[latestMeterColumn];
-  const hasNoMeters = meterValue !== undefined && (
-    meterValue === '0' || 
-    meterValue === '' || 
-    meterValue === '#N/D' || 
-    parseInt(meterValue) === 0 || 
-    isNaN(parseInt(meterValue))
-  );
-  
-  if (status === 'não registrado') {
-    return 'Status da DCU é não registrado';
-  }
-  
-  if (status === 'offline') {
-    return 'Status da DCU é offline';
-  }
-  
-  if (status === 'online' && hasNoMeters) {
-    return 'Status da DCU é online mas não contém medidores';
-  }
-  
-  return 'Motivo não identificado';
-};
-
 export const DCUDashboard = ({ data }: DCUDashboardProps) => {
+  const { t } = useLanguage();
   const [selectedComment, setSelectedComment] = useState<string>('all');
   const [mapboxToken, setMapboxToken] = useState<string>('pk.eyJ1IjoiZ3JhemllbGUtbmFuc2VuIiwiYSI6ImNtZ3ozdW9qMDF1M2cyc3B0MXphamhkbmYifQ.JxrSUz5Pd05pK7PXBDg2_w');
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -65,6 +40,33 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const [selectedCollectionDCU, setSelectedCollectionDCU] = useState<string | null>(null);
   const [filterOverloaded, setFilterOverloaded] = useState(false);
   const [filterLowCollection, setFilterLowCollection] = useState(false);
+  
+  // Função auxiliar para determinar o motivo de uma DCU estar em análise
+  const getReasonForDCU = (dcu: DCUData, latestMeterColumn: string): string => {
+    const status = dcu.Status?.toLowerCase();
+    const meterValue = dcu[latestMeterColumn];
+    const hasNoMeters = meterValue !== undefined && (
+      meterValue === '0' || 
+      meterValue === '' || 
+      meterValue === '#N/D' || 
+      parseInt(meterValue) === 0 || 
+      isNaN(parseInt(meterValue))
+    );
+    
+    if (status === 'não registrado') {
+      return t('status.reason.not-registered');
+    }
+    
+    if (status === 'offline') {
+      return t('status.reason.offline');
+    }
+    
+    if (status === 'online' && hasNoMeters) {
+      return t('status.reason.online-no-meters');
+    }
+    
+    return t('status.reason.unknown');
+  };
 
   const analysis = useMemo(() => {
     if (!data || data.length === 0) return null;
@@ -196,9 +198,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     });
 
     const collectionRateData = [
-      { name: 'Abaixo de 95%', value: dcusBelow95.length, color: 'hsl(var(--destructive))' },
-      { name: 'Entre 95% e 98%', value: dcusBetween95And98.length, color: 'hsl(var(--warning))' },
-      { name: 'Acima de 98%', value: dcusAbove98.length, color: 'hsl(var(--success))' },
+      { name: t('collection.below-95').replace('Taxa de sucesso abaixo de 95%', '< 95%'), value: dcusBelow95.length, color: 'hsl(var(--destructive))' },
+      { name: t('collection.between-95-98').replace('Taxa de sucesso entre 95% e 98%', '95% - 98%'), value: dcusBetween95And98.length, color: 'hsl(var(--warning))' },
+      { name: t('collection.above-98').replace('Taxa de sucesso acima de 98%', '≥ 98%'), value: dcusAbove98.length, color: 'hsl(var(--success))' },
     ].filter(s => s.value > 0);
 
     // Top 10 DCUs com menor taxa de coleta (excluindo "Em Estudo")
@@ -294,9 +296,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
     // Status counts para o gráfico de pizza
     const statusCounts = [
-      { name: 'Online', value: onlineDCUs.length, color: 'hsl(var(--success))' },
-      { name: 'Offline', value: offlineDCUs.length, color: 'hsl(var(--destructive))' },
-      { name: 'Não Registrado', value: notRegisteredDCUs.length, color: 'hsl(215 20% 65%)' },
+      { name: t('status.online'), value: onlineDCUs.length, color: 'hsl(var(--success))' },
+      { name: t('status.offline'), value: offlineDCUs.length, color: 'hsl(var(--destructive))' },
+      { name: t('status.not-registered'), value: notRegisteredDCUs.length, color: 'hsl(215 20% 65%)' },
     ].filter(s => s.value > 0);
 
     // Totalizador de medidores por status
@@ -348,8 +350,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     return (
       <Card className="p-8 border-2 border-dashed border-border">
         <div className="text-center">
-          <h3 className="text-xl font-semibold mb-2">Nenhum dado carregado</h3>
-          <p className="text-muted-foreground">Envie os dados de DCUs via chat para visualizar o dashboard</p>
+          <h3 className="text-xl font-semibold mb-2">{t('no-data.title')}</h3>
+          <p className="text-muted-foreground">{t('no-data.description')}</p>
         </div>
       </Card>
     );
@@ -454,9 +456,9 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--accent))'];
 
   const criticalData = [
-    { name: 'Sobrecarga', value: analysis.overloaded.length, color: 'hsl(var(--destructive))' },
-    { name: 'Subcarga', value: analysis.underloaded.length, color: 'hsl(var(--warning))' },
-    { name: 'Sem medidores', value: analysis.noMeters.length, color: 'hsl(215 20% 65%)' },
+    { name: t('load.overload'), value: analysis.overloaded.length, color: 'hsl(var(--destructive))' },
+    { name: t('load.underload'), value: analysis.underloaded.length, color: 'hsl(var(--warning))' },
+    { name: t('load.no-meters'), value: analysis.noMeters.length, color: 'hsl(215 20% 65%)' },
   ];
 
   return (
@@ -465,32 +467,32 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            Análise de Status
+            {t('status.title')}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Última atualização: {analysis.latestDate}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('status.last-update')}: {analysis.latestDate}</p>
         </div>
       </div>
       
       <p className="text-muted-foreground leading-relaxed">
-        Esta seção apresenta o status atual das DCUs, permitindo a análise da saúde da rede AMI. São destacados os dispositivos com comportamento fora do esperado, como DCUs offline, não registradas ou online sem medidores. Também é possível acessar os relatórios da equipe I-NOC Nansen relacionados aos casos em análise.
+        {t('status.description')}
       </p>
 
       {/* Primeira linha: Total, Online, Online sem Medidores */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          title="Total de DCUs"
+          title={t('status.total-dcus')}
           value={analysis.totalDCUs}
           icon={Activity}
           variant="default"
         />
         <StatCard
-          title="DCUs Online"
+          title={t('status.online-dcus')}
           value={analysis.onlineDCUs}
           icon={Power}
           variant="success"
         />
         <StatCard
-          title="Online sem Medidores"
+          title={t('status.online-no-meters')}
           value={analysis.onlineNoMeters.length}
           icon={AlertTriangle}
           variant="warning"
@@ -501,20 +503,20 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <Card className="p-6 border border-border bg-card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Localização das DCUs
+          {t('status.location-title')}
         </h3>
         <div className="flex gap-6 mb-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--success))' }}></div>
-            <span className="text-sm">Online</span>
+            <span className="text-sm">{t('status.online')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--destructive))' }}></div>
-            <span className="text-sm">Offline</span>
+            <span className="text-sm">{t('status.offline')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(215 20% 65%)' }}></div>
-            <span className="text-sm">Não Registrado</span>
+            <span className="text-sm">{t('status.not-registered')}</span>
           </div>
         </div>
         <div ref={mapContainer} className="h-[400px] rounded-lg" />
@@ -526,7 +528,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Power className="h-5 w-5 text-primary" />
-            DCUs por Status
+            {t('status.dcus-by-status')}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -565,27 +567,27 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Casos de Atenção
+            {t('status.attention-cases')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="flex flex-col items-center justify-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-              <span className="text-sm text-muted-foreground mb-2">DCUs Offline</span>
+              <span className="text-sm text-muted-foreground mb-2">{t('status.offline-dcus')}</span>
               <span className="text-4xl font-bold text-destructive">{analysis.offlineDCUs}</span>
             </div>
             <div className="flex flex-col items-center justify-center p-4 bg-warning/10 rounded-lg border border-warning/20">
-              <span className="text-sm text-muted-foreground mb-2">DCUs Não registradas</span>
+              <span className="text-sm text-muted-foreground mb-2">{t('status.not-registered-dcus')}</span>
               <span className="text-4xl font-bold text-warning">{analysis.notRegisteredDCUs}</span>
             </div>
             <div className="flex flex-col items-center justify-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <span className="text-sm text-muted-foreground mb-2">DCUs Online sem medidores</span>
+              <span className="text-sm text-muted-foreground mb-2">{t('status.online-no-meters-dcus')}</span>
               <span className="text-4xl font-bold text-primary">{analysis.onlineNoMetersAttention.length}</span>
             </div>
           </div>
           <div className="text-center p-4 bg-muted/30 rounded-lg">
             <p className="text-lg text-muted-foreground">
-              Casos de atenção representam <span className="font-bold text-primary text-2xl">
+              {t('status.attention-percentage')} <span className="font-bold text-primary text-2xl">
                 {((analysis.offlineDCUs + analysis.notRegisteredDCUs + analysis.onlineNoMetersAttention.length) / analysis.totalDCUs * 100).toFixed(1)}%
-              </span> da rede
+              </span> {t('status.of-network')}
             </p>
           </div>
         </Card>
@@ -596,14 +598,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-semibold flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-primary" />
-            Casos em Análise
+            {t('status.cases-in-analysis')}
           </h3>
           <Button 
             size="sm"
             onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/evandro_silva_nansen_com_br/EdcsSnUwiHVJiVdhISWvZcMBEUgUg2enzLhd-BoBXhNaFQ?e=ORaU91', '_blank')}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Relatório
+            {t('status.report')}
           </Button>
         </div>
 
@@ -612,7 +614,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="flex flex-col">
             <div className="bg-muted p-3 rounded-t-lg border-b-2 border-primary">
               <div className="flex items-center justify-between">
-                <span className="font-semibold">Identificado</span>
+                <span className="font-semibold">{t('status.identified')}</span>
                 <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded-full">
                   {analysis.analysisByStatus.identificado.length}
                 </span>
@@ -620,7 +622,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </div>
             <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-scroll space-y-2">
               {analysis.analysisByStatus.identificado.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+                <p className="text-muted-foreground text-sm text-center py-8">{t('status.no-cases')}</p>
               ) : (
                 analysis.analysisByStatus.identificado.map((dcu) => (
                   <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
@@ -640,7 +642,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="flex flex-col">
             <div className="bg-muted p-3 rounded-t-lg border-b-2 border-warning">
               <div className="flex items-center justify-between">
-                <span className="font-semibold">Em análise</span>
+                <span className="font-semibold">{t('status.in-analysis')}</span>
                 <span className="text-sm bg-warning text-warning-foreground px-2 py-1 rounded-full">
                   {analysis.analysisByStatus.emAnalise.length}
                 </span>
@@ -648,7 +650,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </div>
             <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-scroll space-y-2">
               {analysis.analysisByStatus.emAnalise.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+                <p className="text-muted-foreground text-sm text-center py-8">{t('status.no-cases')}</p>
               ) : (
                 analysis.analysisByStatus.emAnalise.map((dcu) => (
                   <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
@@ -668,7 +670,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="flex flex-col">
             <div className="bg-muted p-3 rounded-t-lg border-b-2 border-amber-500">
               <div className="flex items-center justify-between">
-                <span className="font-semibold">Aguardando atuação</span>
+                <span className="font-semibold">{t('status.awaiting-action')}</span>
                 <span className="text-sm bg-amber-500 text-white px-2 py-1 rounded-full">
                   {analysis.analysisByStatus.aguardandoAtuacao.length}
                 </span>
@@ -676,7 +678,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </div>
             <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-scroll space-y-2">
               {analysis.analysisByStatus.aguardandoAtuacao.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+                <p className="text-muted-foreground text-sm text-center py-8">{t('status.no-cases')}</p>
               ) : (
                 analysis.analysisByStatus.aguardandoAtuacao.map((dcu) => (
                   <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
@@ -696,7 +698,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="flex flex-col">
             <div className="bg-muted p-3 rounded-t-lg border-b-2 border-success">
               <div className="flex items-center justify-between">
-                <span className="font-semibold">Solucionado</span>
+                <span className="font-semibold">{t('status.solved')}</span>
                 <span className="text-sm bg-success text-success-foreground px-2 py-1 rounded-full">
                   {analysis.analysisByStatus.solucionado.length}
                 </span>
@@ -704,14 +706,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </div>
             <div className="border border-t-0 rounded-b-lg p-2 bg-card/50 min-h-[300px] max-h-[500px] overflow-y-scroll space-y-2">
               {analysis.analysisByStatus.solucionado.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">Nenhum caso</p>
+                <p className="text-muted-foreground text-sm text-center py-8">{t('status.no-cases')}</p>
               ) : (
                 analysis.analysisByStatus.solucionado.map((dcu) => (
                   <Card key={dcu.DCU} className="p-3 hover:shadow-md transition-shadow">
                     <div className="flex flex-col gap-1">
                       <span className="font-mono font-semibold text-primary text-sm">{dcu.DCU}</span>
                       <span className="text-xs text-muted-foreground">
-                        Comportamento normalizado
+                        {t('status.normalized')}
                       </span>
                     </div>
                   </Card>
@@ -726,13 +728,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            Análise de Carga
+            {t('load.title')}
           </h2>
         </div>
       </div>
       
       <p className="text-muted-foreground leading-relaxed">
-        Esta seção exibe a carga atual das DCUs, destacando aquelas que estão sobrecarregadas, subcarregadas ou sem medidores vinculados. Também são apresentados os casos em análise, com acesso aos relatórios técnicos correspondentes.
+        {t('load.description')}
       </p>
 
       {/* Primeira linha: DCUs Críticas (Donut) e DCUs em Análise (Barras) */}
@@ -741,7 +743,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            DCUs Críticas
+            {t('load.critical-dcus')}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -792,14 +794,14 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                DCUs em Análise
+                {t('load.dcus-in-analysis')}
               </h3>
               <Button 
                 size="sm"
                 onClick={() => window.open('https://nansencombr-my.sharepoint.com/:w:/g/personal/graziele_souza_nansen_com_br/ES3VFQF59G9En61f6228DaEB4lgGndrCreZLDkNPbicYzw?e=e58fq7', '_blank')}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Relatório
+                {t('status.report')}
               </Button>
             </div>
             <div className="flex items-center justify-center mb-2">
@@ -807,7 +809,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 <div className="text-3xl font-bold text-primary">
                   {analysis.commentCounts.reduce((sum, item) => sum + item.count, 0)}
                 </div>
-                <p className="text-sm text-muted-foreground">Total de DCUs em Análise</p>
+                <p className="text-sm text-muted-foreground">{t('load.total-in-analysis')}</p>
               </div>
             </div>
             <div className="flex justify-center">
@@ -933,13 +935,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            Análise Histórica
+            {t('history.title')}
           </h2>
         </div>
       </div>
       
       <p className="text-muted-foreground leading-relaxed">
-        Esta seção apresenta uma análise histórica da carga nas DCUs, com foco nos 10 dispositivos que registraram maior variação ao longo do tempo. A visualização permite identificar padrões de oscilação e avaliar a estabilidade da rede.
+        {t('history.description')}
       </p>
 
       {/* Primeira linha: Variação Histórica e Top 10 Desvios */}
@@ -949,7 +951,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <Card className="p-6 border border-border bg-card md:col-span-3">
             <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              Variação Histórica - Top 10 DCUs
+              {t('history.variation-title')}
             </h3>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={analysis.trendData}>
@@ -1006,7 +1008,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card md:col-span-1">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-warning" />
-            Top 10 Desvios
+            {t('history.top-deviations')}
           </h3>
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
             {analysis.top10Deviations.map((dcuData, idx) => {
@@ -1046,7 +1048,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           </div>
           <div className="mt-3 space-y-2">
             <p className="text-xs text-muted-foreground text-center">
-              Clique no ID da DCU para filtrar
+              {t('history.click-to-filter')}
             </p>
             {visibleDCUs.size > 0 && (
               <Button
@@ -1055,7 +1057,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 onClick={() => setVisibleDCUs(new Set())}
                 className="w-full text-xs"
               >
-                Voltar (mostrar todas)
+                {t('history.show-all')}
               </Button>
             )}
           </div>
@@ -1066,20 +1068,20 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       <div className="flex items-center justify-between border-b border-border pb-4 pt-8">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            Análise de Taxa de Coleta Diária
+            {t('collection.title')}
           </h2>
         </div>
       </div>
 
       <p className="text-muted-foreground leading-relaxed">
-        Esta seção apresenta a taxa de coleta diária reportada pelo MDC. A falha ou sucesso de cada medidor impacta diretamente na taxa da DCU à qual ele está conectado.
+        {t('collection.description')}
       </p>
 
       {/* Primeira linha: Mapa de Taxa de Coleta (largura completa) */}
       <Card className="p-6 border border-border bg-card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          Mapa de Taxa de Coleta
+          {t('collection.map-title')}
         </h3>
         <div className="flex gap-6 mb-4">
           <div className="flex items-center gap-2">
@@ -1108,7 +1110,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Distribuição de Taxa de Coleta
+            {t('collection.distribution-title')}
           </h3>
           {analysis.collectionRateData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -1154,7 +1156,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[300px]">
-              <p className="text-muted-foreground">Dados de taxa de coleta não disponíveis</p>
+              <p className="text-muted-foreground">{t('collection.no-data')}</p>
             </div>
           )}
         </Card>
@@ -1163,29 +1165,29 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <Card className="p-6 border border-border bg-card">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            Indicadores de Taxa de Coleta
+            {t('collection.indicators-title')}
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/20">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                <span className="font-medium">Taxa de sucesso abaixo de 95%</span>
+                <span className="font-medium">{t('collection.below-95')}</span>
               </div>
-              <span className="text-2xl font-bold text-destructive">{analysis.dcusBelow95.length} DCUs</span>
+              <span className="text-2xl font-bold text-destructive">{analysis.dcusBelow95.length} {t('collection.dcus')}</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-warning"></div>
-                <span className="font-medium">Taxa de sucesso entre 95% e 98%</span>
+                <span className="font-medium">{t('collection.between-95-98')}</span>
               </div>
-              <span className="text-2xl font-bold text-warning">{analysis.dcusBetween95And98.length} DCUs</span>
+              <span className="text-2xl font-bold text-warning">{analysis.dcusBetween95And98.length} {t('collection.dcus')}</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-success/10 rounded-lg border border-success/20">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-success"></div>
-                <span className="font-medium">Taxa de sucesso acima de 98%</span>
+                <span className="font-medium">{t('collection.above-98')}</span>
               </div>
-              <span className="text-2xl font-bold text-success">{analysis.dcusAbove98.length} DCUs</span>
+              <span className="text-2xl font-bold text-success">{analysis.dcusAbove98.length} {t('collection.dcus')}</span>
             </div>
           </div>
         </Card>
@@ -1196,7 +1198,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            Dispersão: Carga vs Taxa de Coleta
+            {t('collection.scatter-title')}
           </h3>
           <div className="flex gap-3 items-center">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -1206,7 +1208,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 onChange={(e) => setFilterOverloaded(e.target.checked)}
                 className="w-4 h-4 rounded border-border"
               />
-              <span className="whitespace-nowrap">Região de DCUs sobrecarregadas (&gt;850)</span>
+              <span className="whitespace-nowrap">{t('collection.filter-overloaded')}</span>
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
@@ -1215,7 +1217,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                 onChange={(e) => setFilterLowCollection(e.target.checked)}
                 className="w-4 h-4 rounded border-border"
               />
-              <span className="whitespace-nowrap">Região de taxa de coleta baixa (&lt;95%)</span>
+              <span className="whitespace-nowrap">{t('collection.filter-low-rate')}</span>
             </label>
             {(filterOverloaded || filterLowCollection) && (
               <Button
@@ -1226,7 +1228,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                   setFilterLowCollection(false);
                 }}
               >
-                Voltar ao gráfico original
+                {t('collection.reset-graph')}
               </Button>
             )}
           </div>
@@ -1249,16 +1251,16 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                     <XAxis 
                       type="number" 
                       dataKey="taxa" 
-                      name="Taxa de Coleta"
-                      label={{ value: 'Taxa de coleta (% sucessos)', position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
+                      name={t('collection.rate')}
+                      label={{ value: t('collection.x-axis'), position: 'bottom', offset: 40, fill: 'hsl(var(--muted-foreground))' }}
                       tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       domain={[0, 100]}
                     />
                     <YAxis 
                       type="number" 
                       dataKey="carga" 
-                      name="Carga"
-                      label={{ value: 'Carga (Qtd. medidores)', angle: -90, position: 'insideLeft', offset: 0, fill: 'hsl(var(--muted-foreground))' }}
+                      name={t('collection.load')}
+                      label={{ value: t('collection.y-axis'), angle: -90, position: 'insideLeft', offset: 0, fill: 'hsl(var(--muted-foreground))' }}
                       tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       domain={['auto', 'auto']}
                     />
@@ -1278,8 +1280,8 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
                           return (
                             <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
                               <p className="font-semibold text-foreground mb-1">{data.dcu}</p>
-                              <p className="text-sm text-muted-foreground">Taxa: {data.taxa.toFixed(2)}%</p>
-                              <p className="text-sm text-muted-foreground">Carga: {data.carga} medidores</p>
+                              <p className="text-sm text-muted-foreground">{t('collection.rate')}: {data.taxa.toFixed(2)}%</p>
+                              <p className="text-sm text-muted-foreground">{t('collection.load')}: {data.carga} {t('collection.meters')}</p>
                             </div>
                           );
                         }
@@ -1349,7 +1351,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
           <div className="hidden md:block w-px h-24 bg-border"></div>
           
           <div className="flex-1 text-center space-y-2">
-            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">Revisores</p>
+            <p className="font-semibold text-foreground text-sm uppercase tracking-wider">{t('reviewers.title')}</p>
             <div className="space-y-3">
               <div>
                 <p className="text-lg font-medium text-foreground">Evandro Cabral</p>

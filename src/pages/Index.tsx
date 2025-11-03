@@ -3,10 +3,12 @@ import { DCUDashboard } from '@/components/DCUDashboard';
 import { NansenHeader } from '@/components/NansenHeader';
 import { loadDCUData } from '@/utils/loadDCUData';
 import { Card } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Index = () => {
   const [dcuData, setDcuData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Carregar dados do arquivo Excel
@@ -24,7 +26,7 @@ const Index = () => {
           <Card className="p-8">
             <div className="flex items-center justify-center">
               <div className="animate-pulse text-lg text-muted-foreground">
-                Carregando dados...
+                {t('loading')}
               </div>
             </div>
           </Card>
@@ -40,9 +42,9 @@ const Index = () => {
       <div className="container mx-auto px-6 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-5xl font-bold text-cyan-400 mb-3">
-            Monitoração da Rede AMI CEMIG
+            {t('header.title')}
           </h1>
-          <p className="text-xl text-muted-foreground">Equipe de I-NOC Nansen</p>
+          <p className="text-xl text-muted-foreground">{t('header.subtitle')}</p>
         </div>
 
         <DCUDashboard data={dcuData} />
