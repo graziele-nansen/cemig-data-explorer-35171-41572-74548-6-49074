@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Language = 'pt' | 'en';
+type Language = 'pt' | 'en' | 'zh';
 
 interface LanguageContextType {
   language: Language;
@@ -220,5 +220,97 @@ const translations: Record<Language, Record<string, string>> = {
     // Reviewers
     'reviewers.title': 'Reviewers',
     'reviewers.reviewed-by': 'Reviewed by',
+  },
+  zh: {
+    // Header
+    'header.tagline': '推动巴西的能源\n通过我们的技术',
+    'header.title': 'CEMIG AMI 网络监控',
+    'header.subtitle': 'I-NOC Nansen 团队',
+    
+    // Loading
+    'loading': '加载数据中...',
+    'no-data.title': '未加载数据',
+    'no-data.description': '通过聊天发送 DCU 数据以查看仪表板',
+    
+    // Status Analysis
+    'status.title': '状态分析',
+    'status.description': '本节介绍 DCU 的当前状态，允许分析 AMI 网络健康状况。突出显示具有意外行为的设备，例如离线 DCU、未注册或在线但无仪表。还可以访问与分析中的案例相关的 I-NOC Nansen 团队报告。',
+    'status.last-update': '最后更新',
+    'status.total-dcus': '总 DCU 数',
+    'status.online-dcus': '在线 DCU',
+    'status.online-no-meters': '在线无仪表',
+    'status.location-title': 'DCU 位置',
+    'status.online': '在线',
+    'status.offline': '离线',
+    'status.not-registered': '未注册',
+    'status.dcus-by-status': '按状态分类的 DCU',
+    'status.attention-cases': '注意案例',
+    'status.offline-dcus': '离线 DCU',
+    'status.not-registered-dcus': '未注册 DCU',
+    'status.online-no-meters-dcus': '在线无仪表 DCU',
+    'status.attention-percentage': '注意案例占',
+    'status.of-network': '的网络',
+    'status.cases-in-analysis': '分析中的案例',
+    'status.report': '报告',
+    'status.identified': '已识别',
+    'status.in-analysis': '分析中',
+    'status.awaiting-action': '等待行动',
+    'status.solved': '已解决',
+    'status.no-cases': '无案例',
+    'status.normalized': '行为正常化',
+    'status.reason.not-registered': 'DCU 状态未注册',
+    'status.reason.offline': 'DCU 状态离线',
+    'status.reason.online-no-meters': 'DCU 状态在线但不包含仪表',
+    'status.reason.unknown': '原因未识别',
+    
+    // Load Analysis
+    'load.title': '负载分析',
+    'load.description': '本节显示 DCU 的当前负载，突出显示那些过载、负载不足或没有链接仪表的 DCU。还介绍了分析中的案例，并可访问相应的技术报告。',
+    'load.critical-dcus': '关键 DCU',
+    'load.overload': '过载',
+    'load.underload': '负载不足',
+    'load.no-meters': '无仪表',
+    'load.dcus-in-analysis': '分析中的 DCU',
+    'load.total-in-analysis': '分析中的 DCU 总数',
+    'load.critical-dcus-map': '关键 DCU 地图',
+    'load.overloaded': '过载',
+    'load.underloaded': '负载不足',
+    'load.overloaded-title': '过载 (>850 仪表)',
+    'load.underloaded-title': '负载不足 (<50 仪表)',
+    'load.no-meters-title': '无仪表',
+    'load.more': '更多',
+    
+    // Historical Analysis
+    'history.title': '历史分析',
+    'history.description': '本节介绍 DCU 负载的历史分析，重点关注随时间变化最大的 10 个设备。该可视化允许识别波动模式并评估网络稳定性。',
+    'history.variation-title': '历史变化 - 前 10 名 DCU',
+    'history.top-deviations': '前 10 名偏差',
+    'history.click-to-filter': '点击 DCU ID 进行筛选',
+    'history.show-all': '返回（显示全部）',
+    
+    // Collection Rate Analysis
+    'collection.title': '每日采集率分析',
+    'collection.description': '本节介绍 MDC 报告的每日采集率。每个仪表的失败或成功直接影响其连接的 DCU 的率。',
+    'collection.map-title': '采集率地图',
+    'collection.distribution-title': '采集率分布',
+    'collection.indicators-title': '采集率指标',
+    'collection.below-95': '成功率低于 95%',
+    'collection.between-95-98': '成功率在 95% 和 98% 之间',
+    'collection.above-98': '成功率高于 98%',
+    'collection.dcus': 'DCU',
+    'collection.no-data': '采集率数据不可用',
+    'collection.scatter-title': '散点图：负载 vs 采集率',
+    'collection.filter-overloaded': '过载 DCU 区域 (>850)',
+    'collection.filter-low-rate': '低采集率区域 (<95%)',
+    'collection.reset-graph': '返回原始图表',
+    'collection.x-axis': '采集率（% 成功）',
+    'collection.y-axis': '负载（数量 仪表）',
+    'collection.rate': '率',
+    'collection.load': '负载',
+    'collection.meters': '仪表',
+    
+    // Reviewers
+    'reviewers.title': '审阅者',
+    'reviewers.reviewed-by': '审阅者',
   }
 };

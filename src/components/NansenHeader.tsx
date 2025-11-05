@@ -1,7 +1,6 @@
 import nansenLogo from '@/assets/logo-nansen.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Globe } from 'lucide-react';
 
 export const NansenHeader = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -23,15 +22,33 @@ export const NansenHeader = () => {
             </p>
           </div>
 
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end gap-2">
             <Button
-              variant="outline"
+              variant={language === 'en' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setLanguage(language === 'pt' ? 'en' : 'pt')}
+              onClick={() => setLanguage('en')}
               className="gap-2"
             >
-              <Globe className="h-4 w-4" />
-              {language === 'pt' ? 'EN' : 'PT'}
+              <span className="text-lg">🇺🇸</span>
+              <span className="text-xs">English</span>
+            </Button>
+            <Button
+              variant={language === 'pt' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLanguage('pt')}
+              className="gap-2"
+            >
+              <span className="text-lg">🇧🇷</span>
+              <span className="text-xs">Português</span>
+            </Button>
+            <Button
+              variant={language === 'zh' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLanguage('zh')}
+              className="gap-2"
+            >
+              <span className="text-lg">🇨🇳</span>
+              <span className="text-xs">中文</span>
             </Button>
           </div>
         </div>
