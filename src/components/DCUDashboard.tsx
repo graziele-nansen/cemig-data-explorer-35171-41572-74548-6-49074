@@ -168,10 +168,13 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
     // Função auxiliar para converter taxa de coleta em número
     const parseCollectionRate = (value: any): number => {
-      if (!value || value === '#N/D') return 0;
+      if (!value || value === '#N/D' || value === '') return 0;
       if (typeof value === 'number') return value;
       if (typeof value === 'string') {
-        return parseFloat(value.replace('%', '').trim());
+        // Remove % se existir, trim espaços, e converte para número
+        const cleaned = value.replace('%', '').replace(',', '.').trim();
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
       }
       return 0;
     };
