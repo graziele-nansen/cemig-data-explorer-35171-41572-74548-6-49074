@@ -4,9 +4,13 @@ export async function loadDCUData(): Promise<any[]> {
   try {
     // Google Sheets ID extraído do link fornecido
     const sheetId = '1k5CmUWiCf3KVuewsvSlkTvUQMY57S2Y0';
-    const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+    // Adiciona timestamp para evitar cache
+    const cacheBuster = `&_t=${Date.now()}`;
+    const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx${cacheBuster}`;
     
-    const response = await fetch(exportUrl);
+    const response = await fetch(exportUrl, {
+      cache: 'no-store' // Força buscar dados frescos
+    });
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
