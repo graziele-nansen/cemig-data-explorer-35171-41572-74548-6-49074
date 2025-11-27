@@ -73,20 +73,27 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
     // Identificar colunas de datas (Meters XX.XX.XXXX)
     const firstRow = data[0];
-    const meterColumns = Object.keys(firstRow).filter(key => key.startsWith('Meters '));
+    const allColumns = Object.keys(firstRow);
+    console.log('Todas as colunas:', allColumns);
+    
+    const meterColumns = allColumns.filter(key => key.startsWith('Meters '));
     const dates = meterColumns.map(col => col.replace('Meters ', '')).sort();
     const latestMeterDate = dates[dates.length - 1];
     const latestMeterColumn = `Meters ${latestMeterDate}`;
 
     // Identificar a data mais recente da coluna Status (formato "Status DD.MM.YYYY")
-    const statusColumns = Object.keys(firstRow).filter(key => key.startsWith('Status ') && /\d{2}\.\d{2}\.\d{4}/.test(key));
+    const statusColumns = allColumns.filter(key => key.startsWith('Status ') && /\d{2}\.\d{2}\.\d{4}/.test(key));
+    console.log('Colunas de Status encontradas:', statusColumns);
+    
     const statusDates = statusColumns.map(col => col.replace('Status ', '')).sort((a, b) => {
       // Ordenar por data (DD.MM.YYYY -> YYYY.MM.DD para comparação)
       const [dayA, monthA, yearA] = a.split('.');
       const [dayB, monthB, yearB] = b.split('.');
       return `${yearA}.${monthA}.${dayA}`.localeCompare(`${yearB}.${monthB}.${dayB}`);
     });
+    console.log('Datas de Status ordenadas:', statusDates);
     const latestStatusDate = statusDates.length > 0 ? statusDates[statusDates.length - 1] : latestMeterDate;
+    console.log('Data mais recente de Status:', latestStatusDate);
 
     // Calcular estatísticas
     const onlineDCUs = data.filter(d => d.Status && d.Status.toLowerCase() === 'online');
