@@ -74,7 +74,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     // Identificar colunas de datas (Meters XX.XX.XXXX)
     const firstRow = data[0];
     const allColumns = Object.keys(firstRow);
-    console.log('Todas as colunas:', allColumns);
+    console.log('Todas as colunas (nomes):', allColumns.join(' | '));
     
     const meterColumns = allColumns.filter(key => key.startsWith('Meters '));
     const dates = meterColumns.map(col => col.replace('Meters ', '')).sort();
@@ -83,7 +83,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
 
     // Identificar a data mais recente da coluna Status (formato "Status DD.MM.YYYY")
     const statusColumns = allColumns.filter(key => key.startsWith('Status ') && /\d{2}\.\d{2}\.\d{4}/.test(key));
-    console.log('Colunas de Status encontradas:', statusColumns);
+    console.log('Colunas de Status encontradas:', statusColumns.join(' | '));
     
     const statusDates = statusColumns.map(col => col.replace('Status ', '')).sort((a, b) => {
       // Ordenar por data (DD.MM.YYYY -> YYYY.MM.DD para comparação)
@@ -91,7 +91,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
       const [dayB, monthB, yearB] = b.split('.');
       return `${yearA}.${monthA}.${dayA}`.localeCompare(`${yearB}.${monthB}.${dayB}`);
     });
-    console.log('Datas de Status ordenadas:', statusDates);
+    console.log('Datas de Status ordenadas:', statusDates.join(' | '));
     const latestStatusDate = statusDates.length > 0 ? statusDates[statusDates.length - 1] : latestMeterDate;
     console.log('Data mais recente de Status:', latestStatusDate);
 
