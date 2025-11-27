@@ -75,8 +75,18 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     const firstRow = data[0];
     const meterColumns = Object.keys(firstRow).filter(key => key.startsWith('Meters '));
     const dates = meterColumns.map(col => col.replace('Meters ', '')).sort();
-    const latestDate = dates[dates.length - 1];
-    const latestMeterColumn = `Meters ${latestDate}`;
+    const latestMeterDate = dates[dates.length - 1];
+    const latestMeterColumn = `Meters ${latestMeterDate}`;
+
+    // Identificar a data mais recente da coluna Status (formato "Status DD.MM.YYYY")
+    const statusColumns = Object.keys(firstRow).filter(key => key.startsWith('Status ') && /\d{2}\.\d{2}\.\d{4}/.test(key));
+    const statusDates = statusColumns.map(col => col.replace('Status ', '')).sort((a, b) => {
+      // Ordenar por data (DD.MM.YYYY -> YYYY.MM.DD para comparação)
+      const [dayA, monthA, yearA] = a.split('.');
+      const [dayB, monthB, yearB] = b.split('.');
+      return `${yearA}.${monthA}.${dayA}`.localeCompare(`${yearB}.${monthB}.${dayB}`);
+    });
+    const latestStatusDate = statusDates.length > 0 ? statusDates[statusDates.length - 1] : latestMeterDate;
 
     // Calcular estatísticas
     const onlineDCUs = data.filter(d => d.Status && d.Status.toLowerCase() === 'online');
@@ -312,7 +322,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     };
 
     return {
-      latestDate,
+      latestDate: latestStatusDate,
       overloaded,
       underloaded,
       noMeters,
