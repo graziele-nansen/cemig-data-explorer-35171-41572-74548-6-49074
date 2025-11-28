@@ -77,23 +77,18 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     console.log('Todas as colunas (nomes):', allColumns.join(' | '));
     
     const meterColumns = allColumns.filter(key => key.startsWith('Meters '));
-    const dates = meterColumns.map(col => col.replace('Meters ', '')).sort();
-    const latestMeterDate = dates[dates.length - 1];
-    const latestMeterColumn = `Meters ${latestMeterDate}`;
-
-    // Identificar a data mais recente da coluna Status (formato "Status DD.MM.YYYY")
-    const statusColumns = allColumns.filter(key => key.startsWith('Status ') && /\d{2}\.\d{2}\.\d{4}/.test(key));
-    console.log('Colunas de Status encontradas:', statusColumns.join(' | '));
     
-    const statusDates = statusColumns.map(col => col.replace('Status ', '')).sort((a, b) => {
-      // Ordenar por data (DD.MM.YYYY -> YYYY.MM.DD para comparação)
+    // Ordenar datas corretamente (DD.MM.YYYY -> YYYY.MM.DD para comparação)
+    const dates = meterColumns.map(col => col.replace('Meters ', '')).sort((a, b) => {
       const [dayA, monthA, yearA] = a.split('.');
       const [dayB, monthB, yearB] = b.split('.');
       return `${yearA}.${monthA}.${dayA}`.localeCompare(`${yearB}.${monthB}.${dayB}`);
     });
-    console.log('Datas de Status ordenadas:', statusDates.join(' | '));
-    const latestStatusDate = statusDates.length > 0 ? statusDates[statusDates.length - 1] : latestMeterDate;
-    console.log('Data mais recente de Status:', latestStatusDate);
+    
+    console.log('Datas ordenadas:', dates.join(' | '));
+    const latestMeterDate = dates[dates.length - 1];
+    const latestMeterColumn = `Meters ${latestMeterDate}`;
+    console.log('Data mais recente:', latestMeterDate);
 
     // Calcular estatísticas
     const onlineDCUs = data.filter(d => d.Status && d.Status.toLowerCase() === 'online');
@@ -329,7 +324,7 @@ export const DCUDashboard = ({ data }: DCUDashboardProps) => {
     };
 
     return {
-      latestDate: latestStatusDate,
+      latestDate: latestMeterDate,
       overloaded,
       underloaded,
       noMeters,
